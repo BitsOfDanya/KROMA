@@ -40,9 +40,6 @@ coverage/
 *.joblib
 *.safetensors
 *.ipynb_checkpoints/
-data/**
+data/*
 !data/README.md
-!data/**/
-!data/**/.gitkeep
-ml/models/**
-!ml/models/.gitkeep
+ml/models/
