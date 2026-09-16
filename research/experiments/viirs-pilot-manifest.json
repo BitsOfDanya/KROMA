@@ -1,0 +1,22 @@
+{
+  "max_per_stratum": 40,
+  "normalized_count": 74599,
+  "selected_count": 200,
+  "selected_sha256": "234e1c3f7c59e5a29955557fed08c746c34686cbd9335d188b560b1f59a38485",
+  "selected_splits": {
+    "test": 38,
+    "train": 123,
+    "validation": 39
+  },
+  "selection_seed": "kroma-viirs-pilot-v1",
+  "source": "VIIRS_SNPP_NRT",
+  "source_sha256": "edf79f62b35ba4485d7c85e01be5f6f61d30ab7b4addcf2eea00e2581982c30f",
+  "source_url": "https://firms.modaps.eosdis.nasa.gov/content/notebooks/sample_viirs_snpp_071223.csv",
+  "strata": {
+    "h_D": 4610,
+    "h_N": 302,
+    "l_D": 4792,
+    "n_D": 46306,
+    "n_N": 18589
+  }
+}
