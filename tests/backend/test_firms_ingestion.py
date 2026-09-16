@@ -40,3 +40,13 @@ def test_invalid_input_does_not_replace_previous_output(tmp_path: Path) -> None:
         normalize_csv(input_path, output_path, "VIIRS_SNPP_NRT")
 
     assert output_path.read_bytes() == first_output
+
+
+def test_input_cannot_be_overwritten(tmp_path: Path) -> None:
+    input_path = tmp_path / "firms.csv"
+    input_path.write_text(HEADER + ROW)
+
+    with pytest.raises(ValueError, match="input and output paths must differ"):
+        normalize_csv(input_path, input_path, "VIIRS_SNPP_NRT")
+
+    assert input_path.read_text() == HEADER + ROW
