@@ -1,8 +1,16 @@
-export default function Home() {
+"use client";
+
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
+
+const OverviewMapView = dynamic(() => import("@/features/overview/OverviewMapView").then((mod) => mod.OverviewMapView), {
+  ssr: false,
+});
+
+export default function OverviewPage() {
   return (
-    <main>
-      <h1>KROMA</h1>
-      <p>Основа интерфейса спутникового мониторинга лесных пожаров.</p>
-    </main>
+    <Suspense fallback={null}>
+      <OverviewMapView />
+    </Suspense>
   );
 }

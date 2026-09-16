@@ -20,6 +20,8 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
       NASA_FIRMS_API_KEY: ${NASA_FIRMS_API_KEY:-}
+      KROMA_DATA_SOURCE: ${KROMA_DATA_SOURCE:-demo}
+      KROMA_CORS_ORIGINS: ${KROMA_CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
     ports:
       - "8000:8000"
     depends_on:
@@ -32,6 +34,7 @@ services:
       dockerfile: frontend/Dockerfile
     environment:
       NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
     ports:
       - "3000:3000"
     depends_on:

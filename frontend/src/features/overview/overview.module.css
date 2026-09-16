@@ -1,0 +1,176 @@
+.workspace {
+  position: absolute;
+  inset: 0;
+  --inspector-offset: 0px;
+}
+
+.workspace[data-inspector="true"] {
+  --inspector-offset: calc(var(--inspector-width) + 10px);
+}
+
+.rail {
+  position: absolute;
+  z-index: 10;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-overlay);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(8px);
+}
+
+.railDivider {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--border-strong);
+}
+
+.railBadge {
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: var(--incident-critical);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.panelSlot {
+  position: absolute;
+  z-index: 9;
+  top: 10px;
+  left: calc(10px + var(--rail-width) + 8px);
+  bottom: calc(var(--timeline-current, var(--timeline-height)) + 20px);
+  width: var(--panel-width);
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.panel {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  min-height: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-panel);
+  animation: panelIn var(--duration) var(--ease);
+  overflow: hidden;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.panelBody {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.modeToggle {
+  position: absolute;
+  z-index: 8;
+  top: 10px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modeToggle > div {
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(8px);
+}
+
+.replayBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  background: var(--selected);
+  color: var(--selected-contrast);
+  font-size: 11.5px;
+  font-weight: 600;
+  box-shadow: var(--shadow-float);
+}
+
+.inspectorSlot {
+  position: absolute;
+  z-index: 9;
+  top: 10px;
+  right: 10px;
+  bottom: calc(var(--timeline-current, var(--timeline-height)) + 20px);
+  width: var(--inspector-width);
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.inspectorSlot > * {
+  pointer-events: auto;
+}
+
+@media (max-width: 1280px) {
+  .workspace {
+    --panel-width: 340px;
+    --inspector-width: 380px;
+  }
+
+  .modeToggle {
+    left: auto;
+    right: calc(10px + var(--inspector-offset) + 290px);
+    translate: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .modeToggle {
+    top: auto;
+    bottom: calc(var(--timeline-current, var(--timeline-height)) + 20px);
+    left: 64px;
+    right: auto;
+  }
+
+  .inspectorSlot {
+    z-index: 11;
+  }
+}

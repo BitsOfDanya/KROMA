@@ -1,0 +1,193 @@
+.mapRoot {
+  position: absolute;
+  inset: 0;
+  background: var(--map-background, var(--background));
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.mapFailure {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 360px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-overlay);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-panel);
+  z-index: 5;
+}
+
+.mapFailure strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.controls {
+  position: absolute;
+  top: 10px;
+  right: calc(10px + var(--inspector-offset, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  z-index: 4;
+  transition: right var(--duration) var(--ease);
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  padding: 3px;
+  gap: 2px;
+  border-radius: var(--radius-md);
+  background: var(--surface-overlay);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(8px);
+}
+
+.basemapSwitch {
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(8px);
+}
+
+.legend {
+  width: 212px;
+  padding: 10px 12px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-overlay);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(8px);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.legendTitle {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.legendTitle + .legendTitle,
+.legendRows + .legendTitle {
+  margin-top: 10px;
+}
+
+.legendRows {
+  display: grid;
+  gap: 5px;
+}
+
+.legendRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendRow svg {
+  flex: none;
+}
+
+.hoverCard {
+  position: absolute;
+  z-index: 6;
+  min-width: 190px;
+  max-width: 260px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-float);
+  pointer-events: none;
+  font-size: 12px;
+  color: var(--text-secondary);
+  translate: 14px -50%;
+}
+
+.hoverCard[data-pinned="true"] {
+  pointer-events: auto;
+}
+
+.hoverTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.hoverRows {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+}
+
+.hoverRows dt {
+  color: var(--text-tertiary);
+}
+
+.hoverRows dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.hoverAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  color: var(--text);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.hoverAction:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.measureReadout {
+  position: absolute;
+  left: 50%;
+  top: 56px;
+  translate: -50% 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 32px;
+  padding: 0 6px 0 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-float);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.measureReadout strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.measuring canvas {
+  cursor: crosshair !important;
+}
