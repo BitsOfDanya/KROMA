@@ -75,6 +75,8 @@ def normalize_row(row: dict[str, str], source: str) -> HotspotObservation:
 
 
 def normalize_csv(input_path: Path, output_path: Path, source: str) -> int:
+    if input_path.resolve() == output_path.resolve():
+        raise ValueError("input and output paths must differ")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     temporary_path: Path | None = None
     seen: set[str] = set()
