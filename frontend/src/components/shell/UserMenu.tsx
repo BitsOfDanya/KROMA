@@ -1,9 +1,10 @@
 "use client";
 
+import { ArrowLeft, Users } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 
 import { useDismiss } from "@/components/ui/useDismiss";
-import { useOverview } from "@/lib/api/queries";
+import { useWorkspace } from "@/state/workspace";
 
 import styles from "./shell.module.css";
 
@@ -15,10 +16,14 @@ const SHORTCUTS = [
 
 export function UserMenu() {
   const [open, setOpen] = useState(false);
+  const [view, setView] = useState<"root" | "team">("root");
   const ref = useRef<HTMLDivElement>(null);
-  const close = useCallback(() => setOpen(false), []);
+  const close = useCallback(() => {
+    setOpen(false);
+    setView("root");
+  }, []);
   useDismiss(ref, open, close);
-  const overview = useOverview();
+  const appMode = useWorkspace((state) => state.appMode);
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
@@ -32,11 +37,11 @@ export function UserMenu() {
       >
         ДО
       </button>
-      {open && (
+      {open && view === "root" && (
         <div className={`${styles.menu} ${styles.userCard}`} data-align="right" role="dialog" aria-label="Профиль">
           <div className={styles.userName}>Дежурный оператор</div>
           <div className={styles.userRole}>
-            Смена мониторинга · источник данных: {overview.data?.data_source === "demo" ? "демо-набор" : "—"}
+            Смена мониторинга · режим: {appMode === "live" ? "актуальные данные" : "сценарий"}
           </div>
           <div className={styles.menuSection} style={{ paddingLeft: 0 }}>
             Клавиши
@@ -47,6 +52,22 @@ export function UserMenu() {
               <kbd>{key}</kbd>
             </div>
           ))}
+          <button type="button" className={styles.menuItem} style={{ marginTop: 4 }} onClick={() => setView("team")}>
+            <Users size={14} strokeWidth={1.75} />
+            О команде
+          </button>
+        </div>
+      )}
+      {open && view === "team" && (
+        <div className={`${styles.menu} ${styles.userCard}`} data-align="right" role="dialog" aria-label="О команде">
+          <button type="button" className={styles.menuItem} style={{ marginBottom: 6 }} onClick={() => setView("root")}>
+            <ArrowLeft size={14} strokeWidth={1.75} />
+            Назад
+          </button>
+          <div className={styles.userName}>5BIT</div>
+          <p className={styles.teamText}>
+            5bit — команда разработчиков и ML-инженеров с опытом хакатонов, продуктовой разработки, backend, frontend, ML и geospatial задач.
+          </p>
         </div>
       )}
     </div>

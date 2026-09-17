@@ -83,6 +83,17 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+}
+
+.toolGroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
 }
 
 .divider {
@@ -94,7 +105,7 @@
 
 .search {
   position: relative;
-  width: 260px;
+  width: 230px;
 }
 
 .searchInput {
@@ -228,10 +239,22 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 0 6px;
+  height: 26px;
+  min-width: 0;
+  max-width: 260px;
+  flex-shrink: 1;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: 11.5px;
   white-space: nowrap;
+}
+
+.updatedLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .statusDot {
@@ -282,6 +305,13 @@
   color: var(--text-tertiary);
   font-size: 12px;
   margin-bottom: 10px;
+}
+
+.teamText {
+  margin: 4px 0 6px;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 
 .shortcutRow {

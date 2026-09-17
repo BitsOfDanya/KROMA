@@ -43,4 +43,4 @@ coverage/
 data/*
 !data/README.md
 ml/models/
-public/maplibre/
+frontend/public/maplibre/

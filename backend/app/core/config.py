@@ -23,6 +23,15 @@ class Settings:
     data_source: DataSource = "demo"
     cors_origins: list[str] = field(default_factory=list)
     demo_anchor: datetime | None = None
+    firms_api_key: str | None = None
+    firms_base_url: str = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
+    live_sources: tuple[str, ...] = ("VIIRS_SNPP_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT")
+    live_area: str = "world"
+    live_day_range: int = 2
+    live_refresh_seconds: int = 600
+    live_cluster_radius_km: float = 6.0
+    live_cluster_window_hours: float = 48.0
+    live_retention_hours: float = 72.0
 
 
 @lru_cache
@@ -36,4 +45,21 @@ def get_settings() -> Settings:
             os.environ.get("KROMA_CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
         ),
         demo_anchor=_parse_anchor(os.environ.get("KROMA_DEMO_ANCHOR")),
+        firms_api_key=os.environ.get("NASA_FIRMS_API_KEY") or None,
+        firms_base_url=os.environ.get(
+            "KROMA_FIRMS_BASE_URL", "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
+        ),
+        live_sources=tuple(
+            _split_csv(
+                os.environ.get(
+                    "KROMA_LIVE_SOURCES", "VIIRS_SNPP_NRT,VIIRS_NOAA20_NRT,VIIRS_NOAA21_NRT"
+                )
+            )
+        ),
+        live_area=os.environ.get("KROMA_LIVE_AREA", "world"),
+        live_day_range=int(os.environ.get("KROMA_LIVE_DAY_RANGE", "2")),
+        live_refresh_seconds=int(os.environ.get("KROMA_LIVE_REFRESH_SECONDS", "600")),
+        live_cluster_radius_km=float(os.environ.get("KROMA_LIVE_CLUSTER_RADIUS_KM", "6")),
+        live_cluster_window_hours=float(os.environ.get("KROMA_LIVE_CLUSTER_WINDOW_HOURS", "48")),
+        live_retention_hours=float(os.environ.get("KROMA_LIVE_RETENTION_HOURS", "72")),
     )

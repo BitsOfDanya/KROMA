@@ -3,7 +3,8 @@
 import { History, Layers, ListOrdered, LocateFixed, Ruler, SlidersHorizontal } from "lucide-react";
 
 import { IconButton } from "@/components/ui/IconButton";
-import { useOverview } from "@/lib/api/queries";
+import { useLiveIncidents, useOverview } from "@/lib/api/queries";
+import type { FeatureCollection } from "@/lib/api/types";
 import { useWorkspace } from "@/state/workspace";
 
 import styles from "./overview.module.css";
@@ -20,7 +21,12 @@ export function ControlRail() {
   const statusFilter = useWorkspace((state) => state.statusFilter);
   const priorityMin = useWorkspace((state) => state.priorityMin);
   const overview = useOverview();
-  const critical = overview.data?.counts.critical ?? 0;
+  const appMode = useWorkspace((state) => state.appMode);
+  const liveIncidents = useLiveIncidents(null, appMode === "live");
+  const liveCritical = ((liveIncidents.data as FeatureCollection<{ severity: string }> | undefined)?.features ?? []).filter(
+    (item) => item.properties.severity === "critical",
+  ).length;
+  const critical = appMode === "live" ? liveCritical : (overview.data?.counts.critical ?? 0);
   const filtersActive = statusFilter.length > 0 || priorityMin > 0;
 
   const locate = () => {
@@ -54,17 +60,19 @@ export function ControlRail() {
         icon={<Layers {...ICON} />}
         onClick={() => togglePanel("layers")}
       />
-      <span style={{ position: "relative" }}>
-        <IconButton
-          label="Фильтры"
-          tooltipSide="right"
-          active={panel === "filters"}
-          aria-pressed={panel === "filters"}
-          icon={<SlidersHorizontal {...ICON} />}
-          onClick={() => togglePanel("filters")}
-        />
-        {filtersActive && <span className={styles.railBadge} style={{ minWidth: 7, height: 7, padding: 0, top: 6, right: 6 }} />}
-      </span>
+      {appMode === "replay" && (
+        <span style={{ position: "relative" }}>
+          <IconButton
+            label="Фильтры"
+            tooltipSide="right"
+            active={panel === "filters"}
+            aria-pressed={panel === "filters"}
+            icon={<SlidersHorizontal {...ICON} />}
+            onClick={() => togglePanel("filters")}
+          />
+          {filtersActive && <span className={styles.railBadge} style={{ minWidth: 7, height: 7, padding: 0, top: 6, right: 6 }} />}
+        </span>
+      )}
       <IconButton
         label={timelineExpanded ? "Свернуть хронологию" : "Развернуть хронологию"}
         tooltipSide="right"

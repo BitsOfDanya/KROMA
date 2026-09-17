@@ -42,6 +42,8 @@ export function Timeline() {
   const expanded = useWorkspace((state) => state.timelineExpanded);
   const toggleExpanded = useWorkspace((state) => state.toggleTimelineExpanded);
   const selectedId = useWorkspace((state) => state.selectedIncidentId);
+  const appMode = useWorkspace((state) => state.appMode);
+  const isReplay = appMode === "replay";
 
   const hourNow = Math.ceil(now / HOUR) * HOUR;
   const range = useMemo(() => windowRange(timeWindow, now), [timeWindow, now]);
@@ -50,9 +52,9 @@ export function Timeline() {
   const histogramFrom = new Date(range.start - (range.start % (5 * 60_000))).toISOString();
   const histogramTo = new Date(range.now - (range.now % (5 * 60_000))).toISOString();
 
-  const events = useTimelineEvents(fromIso, toIso);
-  const histogram = useObservationHistogram(histogramFrom, histogramTo, 96);
-  const incidentTimeline = useIncidentTimeline(selectedId);
+  const events = useTimelineEvents(fromIso, toIso, isReplay);
+  const histogram = useObservationHistogram(histogramFrom, histogramTo, 96, isReplay);
+  const incidentTimeline = useIncidentTimeline(isReplay ? selectedId : null);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -80,7 +82,7 @@ export function Timeline() {
         <span className={styles.clockTime}>{formatTime(shown)}</span>
         <span className={styles.clockState} data-live={live}>
           {live && <span className={styles.liveDot} />}
-          {live ? "Оперативно" : playing ? "Воспроизведение" : "Ретроспектива"}
+          {live ? "Оперативно" : playing ? "Воспроизведение" : isReplay ? "Ретроспектива" : "История"}
         </span>
       </div>
       <TimelineTrack
@@ -93,50 +95,56 @@ export function Timeline() {
         expanded={expanded}
       />
       <div className={styles.controls}>
-        <button
-          type="button"
-          className={styles.play}
-          aria-label={playing ? "Пауза" : "Воспроизвести развитие"}
-          onClick={() => setPlaying(!playing)}
-        >
-          {playing ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" style={{ marginLeft: 2 }} />}
-        </button>
-        <SegmentedControl<ReplaySpeed>
-          className={styles.speedControl}
-          label="Скорость воспроизведения"
-          size="sm"
-          value={speed}
-          onChange={setSpeed}
-          options={[
-            { value: 1, label: "1×" },
-            { value: 4, label: "4×" },
-            { value: 12, label: "12×" },
-          ]}
-        />
-        <button
-          type="button"
-          className={styles.liveButton}
-          disabled={live}
-          onClick={() => {
-            setPlaying(false);
-            setCursor(null);
-          }}
-        >
-          Сейчас
-        </button>
-        <SegmentedControl<TimeWindow>
-          className={styles.windowControl}
-          label="Окно времени"
-          size="sm"
-          value={timeWindow}
-          onChange={setTimeWindow}
-          options={[
-            { value: "6h", label: "6 ч" },
-            { value: "24h", label: "24 ч" },
-            { value: "3d", label: "3 д" },
-            { value: "7d", label: "7 д" },
-          ]}
-        />
+        {isReplay && (
+          <div className={styles.controlCluster}>
+            <button
+              type="button"
+              className={styles.play}
+              aria-label={playing ? "Пауза" : "Воспроизвести развитие"}
+              onClick={() => setPlaying(!playing)}
+            >
+              {playing ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" style={{ marginLeft: 2 }} />}
+            </button>
+            <SegmentedControl<ReplaySpeed>
+              className={styles.speedControl}
+              label="Скорость воспроизведения"
+              size="sm"
+              value={speed}
+              onChange={setSpeed}
+              options={[
+                { value: 1, label: "1×" },
+                { value: 4, label: "4×" },
+                { value: 12, label: "12×" },
+              ]}
+            />
+          </div>
+        )}
+        <div className={styles.controlCluster}>
+          <button
+            type="button"
+            className={styles.liveButton}
+            disabled={live}
+            onClick={() => {
+              setPlaying(false);
+              setCursor(null);
+            }}
+          >
+            Сейчас
+          </button>
+          <SegmentedControl<TimeWindow>
+            className={styles.windowControl}
+            label="Окно времени"
+            size="sm"
+            value={timeWindow}
+            onChange={setTimeWindow}
+            options={[
+              { value: "6h", label: "6 ч" },
+              { value: "24h", label: "24 ч" },
+              { value: "3d", label: "3 д" },
+              { value: "7d", label: "7 д" },
+            ]}
+          />
+        </div>
         <IconButton
           label={expanded ? "Свернуть хронологию" : "Развернуть хронологию"}
           tooltipSide="top"

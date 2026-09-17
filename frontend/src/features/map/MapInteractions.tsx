@@ -45,11 +45,12 @@ function HoverContent({ state }: { state: HoverState }) {
   const p = state.properties;
   const layer = state.layer;
   if (INCIDENT_INTERACTIVE_LAYERS.includes(layer)) {
+    const isLive = p.detection_count !== undefined;
     return (
       <>
         <div className={styles.hoverTitle}>
           <span className="mono">{String(p.id)}</span>
-          <span>{String(p.district)}</span>
+          {!isLive && <span>{String(p.district)}</span>}
         </div>
         <dl className={styles.hoverRows}>
           <dt>Статус</dt>
@@ -58,8 +59,21 @@ function HoverContent({ state }: { state: HoverState }) {
           <dd>{SEVERITY_LABEL[p.severity as Severity]}</dd>
           <dt>Priority</dt>
           <dd>{String(p.priority)}</dd>
-          <dt>Площадь</dt>
-          <dd>{formatArea(Number(p.area_ha))}</dd>
+          {isLive ? (
+            <>
+              <dt>Детекций</dt>
+              <dd>{String(p.detection_count)}</dd>
+              <dt>FRP</dt>
+              <dd>{Number(p.frp_mw).toFixed(0)} МВт</dd>
+              <dt>Обновлён</dt>
+              <dd>{formatRelative(Number(p.updated) * 1000)}</dd>
+            </>
+          ) : (
+            <>
+              <dt>Площадь</dt>
+              <dd>{formatArea(Number(p.area_ha))}</dd>
+            </>
+          )}
         </dl>
       </>
     );
@@ -242,6 +256,17 @@ export function MapInteractions() {
         return;
       }
       if (INCIDENT_INTERACTIVE_LAYERS.includes(layerId)) {
+        if (useWorkspace.getState().appMode === "live") {
+          setHover({
+            x: event.point.x,
+            y: event.point.y,
+            layer: layerId,
+            source: feature.source,
+            properties: feature.properties,
+            pinned: true,
+          });
+          return;
+        }
         const id = String(feature.properties.id);
         useWorkspace.getState().selectIncident(id);
         setHover(null);

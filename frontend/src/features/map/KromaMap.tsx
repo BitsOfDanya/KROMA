@@ -5,7 +5,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { AttributionControl, Map as MapLibreMap, ScaleControl } from "maplibre-gl";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
-import { INITIAL_VIEW, MAP_BOUNDS } from "@/config/map";
+import { INITIAL_VIEW } from "@/config/map";
 import { useTheme } from "@/state/theme";
 import { useWorkspace } from "@/state/workspace";
 
@@ -70,14 +70,13 @@ export function KromaMap({ initialView, onViewChange, children }: KromaMapProps)
       style: buildBasemapStyle(state.basemap, document.documentElement.dataset.theme === "light" ? "light" : "dark", readPalette()),
       center: start.center,
       zoom: start.zoom,
-      minZoom: 2,
+      minZoom: 1.4,
       maxZoom: 15,
-      maxBounds: MAP_BOUNDS,
       attributionControl: false,
       dragRotate: false,
       pitchWithRotate: false,
       fadeDuration: 180,
-      renderWorldCopies: false,
+      renderWorldCopies: true,
     });
     instance.touchZoomRotate.disableRotation();
     instance.keyboard.disableRotation();

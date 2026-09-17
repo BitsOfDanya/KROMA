@@ -20,6 +20,7 @@ interface LayerRow {
   label: string;
   hint?: string;
   glyph: ReactNode;
+  replayOnly?: boolean;
 }
 
 const line = (color: string, dashed = false) => (
@@ -38,19 +39,20 @@ const dot = (color: string, ring = false) => (
   </svg>
 );
 
-const GROUPS: { title: string; rows: LayerRow[] }[] = [
+const GROUPS: { title: string; rows: LayerRow[]; replayOnly?: boolean }[] = [
   {
     title: "Пожары",
     rows: [
       { id: "incidents", label: "События", hint: "Объединённые детекции KROMA", glyph: dot("var(--incident-critical)") },
-      { id: "rawDetections", label: "Сырые детекции", hint: "VIIRS и MODIS за 7 суток", glyph: dot("var(--observation)") },
-      { id: "burnScars", label: "Гари", glyph: fill("var(--burn-scar)", 0.4) },
-      { id: "perimeter", label: "Периметр", glyph: fill("var(--incident-high)", 0.15) },
-      { id: "activeFront", label: "Активная кромка", glyph: line("var(--incident-critical)") },
+      { id: "rawDetections", label: "Сырые детекции", hint: "VIIRS / MODIS", glyph: dot("var(--observation)") },
+      { id: "burnScars", label: "Гари", glyph: fill("var(--burn-scar)", 0.4), replayOnly: true },
+      { id: "perimeter", label: "Периметр", glyph: fill("var(--incident-high)", 0.15), replayOnly: true },
+      { id: "activeFront", label: "Активная кромка", glyph: line("var(--incident-critical)"), replayOnly: true },
       {
         id: "thermalMemory",
         label: "Thermal Memory",
         hint: "Постоянные тепловые источники",
+        replayOnly: true,
         glyph: (
           <svg width="20" height="14" aria-hidden="true">
             <path d="M10 2 L15 7 L10 12 L5 7 Z" fill="none" stroke="var(--thermal-source)" strokeWidth="1.4" />
@@ -61,6 +63,7 @@ const GROUPS: { title: string; rows: LayerRow[] }[] = [
   },
   {
     title: "Прогноз · выбранное событие",
+    replayOnly: true,
     rows: [
       { id: "forecastP50", label: "P50", hint: "Наиболее вероятная зона", glyph: fill("var(--forecast-50)", 0.35) },
       { id: "forecastP80", label: "P80", glyph: fill("var(--forecast-80)", 0.22) },
@@ -69,6 +72,7 @@ const GROUPS: { title: string; rows: LayerRow[] }[] = [
   },
   {
     title: "Контекст",
+    replayOnly: true,
     rows: [
       { id: "settlements", label: "Населённые пункты", glyph: dot("var(--text)", true) },
       { id: "roads", label: "Дороги", glyph: line("var(--infrastructure)") },
@@ -78,6 +82,7 @@ const GROUPS: { title: string; rows: LayerRow[] }[] = [
   },
   {
     title: "Среда",
+    replayOnly: true,
     rows: [
       {
         id: "wind",
@@ -112,6 +117,10 @@ export function LayersPanel() {
   const basemap = useWorkspace((state) => state.basemap);
   const setBasemap = useWorkspace((state) => state.setBasemap);
   const closePanel = useWorkspace((state) => state.closePanel);
+  const appMode = useWorkspace((state) => state.appMode);
+  const visibleGroups = GROUPS.filter((group) => appMode === "replay" || !group.replayOnly).map(
+    (group) => ({ ...group, rows: group.rows.filter((row) => appMode === "replay" || !row.replayOnly) }),
+  );
 
   return (
     <section className={overviewStyles.panel} aria-labelledby="layers-title">
@@ -141,7 +150,7 @@ export function LayersPanel() {
             ))}
           </div>
         </div>
-        {GROUPS.map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.title} className={styles.group}>
             <h3 className={styles.groupTitle}>{group.title}</h3>
             {group.rows.map((row) => (

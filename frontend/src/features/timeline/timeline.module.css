@@ -99,9 +99,19 @@
 .controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 0 10px 0 12px;
   border-left: 1px solid var(--border);
+}
+
+.controlCluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
 }
 
 .play {

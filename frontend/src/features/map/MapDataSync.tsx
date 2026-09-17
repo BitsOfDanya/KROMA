@@ -5,7 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useFilteredIncidents } from "@/features/incidents/useFilteredIncidents";
 import { api } from "@/lib/api/endpoints";
-import { useHotspots, useIncidentForecast, useMapLayer } from "@/lib/api/queries";
+import {
+  useHotspots,
+  useIncidentForecast,
+  useLiveHotspots,
+  useLiveIncidents,
+  useMapLayer,
+} from "@/lib/api/queries";
 import type { BBox, FeatureCollection } from "@/lib/api/types";
 import { snapBBox } from "@/lib/geo";
 import { incidentStateAtIndex, parseStateKey, stateKey } from "@/lib/replay";
@@ -95,7 +101,30 @@ function useReplayClock() {
   }, [map, styleVersion]);
 }
 
-function IncidentSources() {
+function LiveIncidentSources({ bbox }: { bbox: BBox | null }) {
+  const live = useLiveIncidents(bbox, true);
+  const collections = useMemo(() => {
+    const features =
+      (live.data as FeatureCollection<{ severity: string }> | undefined)?.features ?? [];
+    const regular: GeoJSON.Feature[] = [];
+    const priority: GeoJSON.Feature[] = [];
+    for (const feature of features) {
+      (feature.properties.severity === "critical" ? priority : regular).push(
+        feature as GeoJSON.Feature,
+      );
+    }
+    return {
+      regular: { type: "FeatureCollection", features: regular } as GeoJSON.FeatureCollection,
+      priority: { type: "FeatureCollection", features: priority } as GeoJSON.FeatureCollection,
+    };
+  }, [live.data]);
+
+  useSource(INCIDENTS_SOURCE, collections.regular);
+  useSource(INCIDENTS_PRIORITY_SOURCE, collections.priority);
+  return null;
+}
+
+function ReplayIncidentSources() {
   const { map, styleVersion } = useMapContext();
   const { items } = useFilteredIncidents();
   const cursor = useWorkspace((state) => state.cursor);
@@ -145,24 +174,33 @@ function IncidentSources() {
   return null;
 }
 
+function IncidentSources({ appMode, bbox }: { appMode: "live" | "replay"; bbox: BBox | null }) {
+  if (appMode === "live") return <LiveIncidentSources bbox={bbox} />;
+  return <ReplayIncidentSources />;
+}
+
 function ForecastSource() {
+  const appMode = useWorkspace((state) => state.appMode);
   const selectedId = useWorkspace((state) => state.selectedIncidentId);
-  const forecast = useIncidentForecast(selectedId);
-  const data = selectedId ? (forecast.data as GeoJSON.GeoJSON | undefined) : emptyCollection();
+  const forecast = useIncidentForecast(appMode === "replay" ? selectedId : null);
+  const data = appMode === "replay" && selectedId ? (forecast.data as GeoJSON.GeoJSON | undefined) : emptyCollection();
   useSource(FORECAST_SOURCE, data);
   return null;
 }
 
-export function MapDataSync() {
-  const viewport = useViewport();
-  const bbox = viewport?.bbox ?? null;
+function LiveHotspotSource({ bbox, enabled }: { bbox: BBox | null; enabled: boolean }) {
+  const hotspots = useLiveHotspots(bbox, enabled);
+  const data = enabled ? (hotspots.data as GeoJSON.GeoJSON | undefined) : emptyCollection();
+  useSource(HOTSPOTS_SOURCE, data);
+  return null;
+}
+
+function ReplayLayerSources({ bbox, aggregated }: { bbox: BBox | null; aggregated: boolean }) {
   const layers = useWorkspace((state) => state.layers);
   const evidenceMode = useWorkspace((state) => state.evidenceMode);
   const [hotspotsFrom] = useState(() => new Date(Date.now() - HOTSPOT_WINDOW_MS).toISOString().slice(0, 13) + ":00:00Z");
 
-  useReplayClock();
-
-  const hotspots = useHotspots(bbox, viewport?.aggregated ?? false, hotspotsFrom);
+  const hotspots = useHotspots(bbox, aggregated, hotspotsFrom);
   const perimeters = useMapLayer("perimeters", bbox, api.map.perimeters, evidenceMode === "events");
   const burnScars = useMapLayer("burn-scars", bbox, api.map.burnScars, layers.burnScars);
   const risk = useMapLayer(
@@ -183,11 +221,25 @@ export function MapDataSync() {
   useSource(THERMAL_SOURCE, asGeoJSON(thermal.data));
   useSource(WIND_SOURCE, asGeoJSON(wind.data));
   useSource(CLOUDS_SOURCE, asGeoJSON(clouds.data));
+  return null;
+}
+
+export function MapDataSync() {
+  const viewport = useViewport();
+  const bbox = viewport?.bbox ?? null;
+  const appMode = useWorkspace((state) => state.appMode);
+
+  useReplayClock();
 
   return (
     <>
-      <IncidentSources />
+      <IncidentSources appMode={appMode} bbox={bbox} />
       <ForecastSource />
+      {appMode === "live" ? (
+        <LiveHotspotSource bbox={bbox} enabled={!(viewport?.aggregated ?? true)} />
+      ) : (
+        <ReplayLayerSources bbox={bbox} aggregated={viewport?.aggregated ?? false} />
+      )}
     </>
   );
 }

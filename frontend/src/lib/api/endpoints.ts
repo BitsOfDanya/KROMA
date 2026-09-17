@@ -10,6 +10,7 @@ import type {
   IncidentList,
   IncidentStatus,
   IncidentTimeline,
+  LiveStatus,
   ObservationHistogram,
   Overview,
   RiskObjectKind,
@@ -76,6 +77,14 @@ export const api = {
 
   analytics: (params: { from?: string; to?: string; region?: string | null }, signal?: AbortSignal) =>
     apiGet<AnalyticsSummary>("/api/v1/analytics/summary", params, signal),
+
+  live: {
+    status: (signal?: AbortSignal) => apiGet<LiveStatus>("/api/v1/live/status", {}, signal),
+    hotspots: (bbox: BBox | null, signal?: AbortSignal) =>
+      apiGet<FeatureCollection<HotspotProperties>>("/api/v1/live/hotspots", { bbox: bboxParam(bbox) }, signal),
+    incidents: (bbox: BBox | null, signal?: AbortSignal) =>
+      apiGet<FeatureCollection>("/api/v1/live/incidents", { bbox: bboxParam(bbox) }, signal),
+  },
 
   map: {
     hotspots: (params: { bbox?: BBox | null; zoom?: number; from?: string; to?: string }, signal?: AbortSignal) =>

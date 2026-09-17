@@ -10,3 +10,4 @@ select = ["E", "F", "I", "UP"]
 
 [tool.ruff.lint.per-file-ignores]
 "backend/app/demo/catalog.py" = ["E501"]
+"tests/backend/test_live.py" = ["E501"]

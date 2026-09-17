@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 
 import { GlobalSearch } from "./GlobalSearch";
-import { LastUpdated } from "./LastUpdated";
+import { ModeSwitch } from "./ModeSwitch";
 import { RegionSelect } from "./RegionSelect";
 import styles from "./shell.module.css";
+import { StatusIndicator } from "./StatusIndicator";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import { Wordmark } from "./Wordmark";
@@ -39,9 +40,12 @@ export function TopBar() {
         </Suspense>
         <RegionSelect />
         <div className={styles.divider} />
-        <LastUpdated />
-        <ThemeToggle />
-        <UserMenu />
+        <ModeSwitch />
+        <StatusIndicator />
+        <div className={styles.toolGroup}>
+          <ThemeToggle />
+          <UserMenu />
+        </div>
       </div>
     </header>
   );

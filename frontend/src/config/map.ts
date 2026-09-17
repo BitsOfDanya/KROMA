@@ -67,7 +67,3 @@ export const INITIAL_VIEW = {
   zoom: 3.55,
 };
 
-export const MAP_BOUNDS: [[number, number], [number, number]] = [
-  [-40, 25],
-  [220, 85],
-];

@@ -9,6 +9,7 @@ import { MapDataSync } from "@/features/map/MapDataSync";
 import { MapInteractions } from "@/features/map/MapInteractions";
 import { IncidentInspector } from "@/features/incidents/IncidentInspector";
 import { IncidentQueue } from "@/features/incidents/IncidentQueue";
+import { LiveIncidentQueue } from "@/features/incidents/LiveIncidentQueue";
 import { LayersPanel } from "@/features/layers/LayersPanel";
 import { FiltersPanel } from "@/features/layers/FiltersPanel";
 import { Timeline } from "@/features/timeline/Timeline";
@@ -70,6 +71,7 @@ export function OverviewMapView() {
   useUrlSync();
   const panel = useWorkspace((state) => state.panel);
   const selectedId = useWorkspace((state) => state.selectedIncidentId);
+  const appMode = useWorkspace((state) => state.appMode);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -100,7 +102,7 @@ export function OverviewMapView() {
       <EvidenceModeToggle />
       {panel && (
         <div className={styles.panelSlot}>
-          {panel === "incidents" && <IncidentQueue />}
+          {panel === "incidents" && (appMode === "live" ? <LiveIncidentQueue /> : <IncidentQueue />)}
           {panel === "layers" && <LayersPanel />}
           {panel === "filters" && <FiltersPanel />}
         </div>

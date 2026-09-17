@@ -266,3 +266,19 @@ export interface ObservationHistogram {
   bin_minutes: number;
   bins: { start: string; total: number; incident: number }[];
 }
+
+export type LiveHealth = "live" | "nrt" | "stale" | "offline";
+
+export interface LiveStatus {
+  mode: "live";
+  source: string;
+  status: LiveHealth;
+  configured: boolean;
+  last_fetch_at: string | null;
+  latest_observation_at: string | null;
+  next_refresh_at: string | null;
+  refresh_interval_seconds: number;
+  detection_count: number;
+  incident_count: number;
+  error: string | null;
+}

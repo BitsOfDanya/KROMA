@@ -41,6 +41,7 @@ export function MapLegend() {
   const evidenceMode = useWorkspace((state) => state.evidenceMode);
   const layers = useWorkspace((state) => state.layers);
   const selected = useWorkspace((state) => state.selectedIncidentId);
+  const isReplay = useWorkspace((state) => state.appMode) === "replay";
 
   return (
     <section className={styles.legend} aria-label="Легенда карты">
@@ -51,9 +52,9 @@ export function MapLegend() {
             <div className={styles.legendRow}><IncidentGlyph kind="critical" />Критический</div>
             <div className={styles.legendRow}><IncidentGlyph kind="confirmed" />Подтверждён</div>
             <div className={styles.legendRow}><IncidentGlyph kind="suspected" />Предварительный</div>
-            {layers.activeFront && <div className={styles.legendRow}><Swatch color="var(--incident-critical)" line />Активная кромка</div>}
+            {isReplay && layers.activeFront && <div className={styles.legendRow}><Swatch color="var(--incident-critical)" line />Активная кромка</div>}
           </div>
-          {selected && (layers.forecastP50 || layers.forecastP80 || layers.forecastP95) && (
+          {isReplay && selected && (layers.forecastP50 || layers.forecastP80 || layers.forecastP95) && (
             <>
               <h3 className={styles.legendTitle}>Прогноз · 24 ч</h3>
               <div className={styles.legendRows}>
@@ -79,19 +80,21 @@ export function MapLegend() {
           </div>
         </>
       )}
-      {(layers.burnScars || layers.thermalMemory || layers.infrastructure) && <h3 className={styles.legendTitle}>Контекст</h3>}
-      <div className={styles.legendRows}>
-        {layers.burnScars && <div className={styles.legendRow}><Swatch color="var(--burn-scar)" opacity={0.35} />Гарь</div>}
-        {layers.thermalMemory && (
-          <div className={styles.legendRow}>
-            <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true">
-              <path d="M11 1.5 L16.5 7 L11 12.5 L5.5 7 Z" fill="none" stroke="var(--thermal-source)" strokeWidth="1.4" />
-            </svg>
-            Постоянный тепловой источник
-          </div>
-        )}
-        {layers.infrastructure && <div className={styles.legendRow}><Swatch color="var(--infrastructure)" line dashed />ЛЭП / инфраструктура</div>}
-      </div>
+      {isReplay && (layers.burnScars || layers.thermalMemory || layers.infrastructure) && <h3 className={styles.legendTitle}>Контекст</h3>}
+      {isReplay && (
+        <div className={styles.legendRows}>
+          {layers.burnScars && <div className={styles.legendRow}><Swatch color="var(--burn-scar)" opacity={0.35} />Гарь</div>}
+          {layers.thermalMemory && (
+            <div className={styles.legendRow}>
+              <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true">
+                <path d="M11 1.5 L16.5 7 L11 12.5 L5.5 7 Z" fill="none" stroke="var(--thermal-source)" strokeWidth="1.4" />
+              </svg>
+              Постоянный тепловой источник
+            </div>
+          )}
+          {layers.infrastructure && <div className={styles.legendRow}><Swatch color="var(--infrastructure)" line dashed />ЛЭП / инфраструктура</div>}
+        </div>
+      )}
     </section>
   );
 }

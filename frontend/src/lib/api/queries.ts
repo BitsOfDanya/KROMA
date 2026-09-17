@@ -21,7 +21,40 @@ export const queryKeys = {
   analytics: (params: { from?: string; to?: string; region?: string | null }) => ["analytics", params] as const,
   hotspots: (bbox: BBox | null, aggregated: boolean, from?: string) => ["map", "hotspots", bbox, aggregated, from] as const,
   layer: (name: string, bbox?: BBox | null) => ["map", name, bbox ?? null] as const,
+  liveStatus: ["live", "status"] as const,
+  liveHotspots: (bbox: BBox | null) => ["live", "hotspots", bbox] as const,
+  liveIncidents: (bbox: BBox | null) => ["live", "incidents", bbox] as const,
 };
+
+const LIVE_POLL_MS = Number(process.env.NEXT_PUBLIC_LIVE_POLL_SECONDS ?? 60) * 1000;
+
+export function useLiveStatus() {
+  return useQuery({
+    queryKey: queryKeys.liveStatus,
+    queryFn: ({ signal }) => api.live.status(signal),
+    refetchInterval: LIVE_POLL_MS,
+  });
+}
+
+export function useLiveHotspots(bbox: BBox | null, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.liveHotspots(bbox),
+    queryFn: ({ signal }) => api.live.hotspots(bbox, signal),
+    enabled: enabled && bbox !== null,
+    placeholderData: keepPreviousData,
+    refetchInterval: LIVE_POLL_MS,
+  });
+}
+
+export function useLiveIncidents(bbox: BBox | null, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.liveIncidents(bbox),
+    queryFn: ({ signal }) => api.live.incidents(bbox, signal),
+    enabled: enabled && bbox !== null,
+    placeholderData: keepPreviousData,
+    refetchInterval: LIVE_POLL_MS,
+  });
+}
 
 export function useOverview() {
   return useQuery({
@@ -73,10 +106,11 @@ export function useIncidentForecast(id: string | null) {
   });
 }
 
-export function useTimelineEvents(from: string, to: string) {
+export function useTimelineEvents(from: string, to: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.timeline(from, to),
     queryFn: ({ signal }) => api.timeline(from, to, signal),
+    enabled,
     placeholderData: keepPreviousData,
   });
 }
@@ -124,10 +158,11 @@ export function useMapLayer<T>(name: string, bbox: BBox | null, fetcher: (bbox: 
   });
 }
 
-export function useObservationHistogram(from: string, to: string, bins: number) {
+export function useObservationHistogram(from: string, to: string, bins: number, enabled = true) {
   return useQuery({
     queryKey: queryKeys.histogram(from, to, bins),
     queryFn: ({ signal }) => api.histogram({ from, to, bins }, signal),
+    enabled,
     placeholderData: keepPreviousData,
     refetchInterval: 5 * MINUTE,
   });

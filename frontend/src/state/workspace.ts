@@ -9,6 +9,7 @@ export type Panel = "incidents" | "layers" | "filters" | null;
 export type BasemapMode = "map" | "satellite" | "terrain";
 export type EvidenceMode = "events" | "data";
 export type QueueFilter = "all" | "critical" | "confirmed" | "monitoring";
+export type AppMode = "live" | "replay";
 
 export type LayerId =
   | "incidents"
@@ -54,6 +55,7 @@ export const DEFAULT_LAYERS: Record<LayerId, boolean> = {
 };
 
 interface WorkspaceState {
+  appMode: AppMode;
   selectedIncidentId: string | null;
   panel: Panel;
   basemap: BasemapMode;
@@ -70,6 +72,7 @@ interface WorkspaceState {
   timelineExpanded: boolean;
   measuring: boolean;
   camera: CameraRequest | null;
+  setAppMode: (mode: AppMode) => void;
   selectIncident: (id: string | null) => void;
   togglePanel: (panel: Exclude<Panel, null>) => void;
   closePanel: () => void;
@@ -94,6 +97,7 @@ interface WorkspaceState {
 let cameraNonce = 0;
 
 export const useWorkspace = create<WorkspaceState>((set) => ({
+  appMode: "replay",
   selectedIncidentId: null,
   panel: "incidents",
   basemap: "map",
@@ -110,6 +114,8 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
   timelineExpanded: false,
   measuring: false,
   camera: null,
+  setAppMode: (appMode) =>
+    set({ appMode, selectedIncidentId: null, playing: false, cursor: null, panel: "incidents" }),
   selectIncident: (id) => set({ selectedIncidentId: id }),
   togglePanel: (panel) => set((state) => ({ panel: state.panel === panel ? null : panel })),
   closePanel: () => set({ panel: null }),

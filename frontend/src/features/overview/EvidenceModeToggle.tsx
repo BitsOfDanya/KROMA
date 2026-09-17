@@ -3,7 +3,7 @@
 import { History } from "lucide-react";
 
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { useOverview } from "@/lib/api/queries";
+import { useLiveStatus, useOverview } from "@/lib/api/queries";
 import { formatDateTime, formatInteger } from "@/lib/format";
 import { useWorkspace, type EvidenceMode } from "@/state/workspace";
 
@@ -13,7 +13,10 @@ export function EvidenceModeToggle() {
   const mode = useWorkspace((state) => state.evidenceMode);
   const setMode = useWorkspace((state) => state.setEvidenceMode);
   const cursor = useWorkspace((state) => state.cursor);
+  const appMode = useWorkspace((state) => state.appMode);
   const overview = useOverview();
+  const live = useLiveStatus();
+  const detectionCount = appMode === "live" ? live.data?.detection_count : overview.data?.raw_detections_7d;
 
   return (
     <div className={styles.modeToggle}>
@@ -28,21 +31,24 @@ export function EvidenceModeToggle() {
             label: (
               <>
                 Данные
-                {overview.data && (
+                {detectionCount !== undefined && (
                   <span style={{ color: "var(--text-tertiary)", fontSize: 11 }} className="tabular">
-                    {formatInteger(overview.data.raw_detections_7d)}
+                    {formatInteger(detectionCount)}
                   </span>
                 )}
               </>
             ),
-            title: "Сырые спутниковые детекции за 7 суток",
+            title:
+              appMode === "live"
+                ? "Сырые детекции NASA FIRMS в кэше"
+                : "Сырые спутниковые детекции за 7 суток",
           },
         ]}
       />
       {cursor !== null && (
         <span className={styles.replayBadge} role="status">
           <History size={13} strokeWidth={2} />
-          Ретроспектива · {formatDateTime(cursor)}
+          {appMode === "live" ? "История" : "Ретроспектива"} · {formatDateTime(cursor)}
         </span>
       )}
     </div>
