@@ -1,7 +1,5 @@
 from datetime import UTC, datetime
 
-from kroma_geo.measure import bbox_intersects, bbox_of, point_in_bbox
-
 from app.demo.dataset import DemoDataset, build_dataset
 from app.models.burn_scar import BurnScar
 from app.models.context import (
@@ -16,6 +14,7 @@ from app.models.geometry import BBox, LineGeometry, PointGeometry, PolygonGeomet
 from app.models.incident import ForecastZone, Incident, PerimeterState, TimelineEvent
 from app.models.observation import Observation, SatellitePass, ThermalSource
 from app.repositories.base import ObservationQuery
+from kroma_geo.measure import bbox_intersects, bbox_of, point_in_bbox
 
 
 def _geometry_bbox(geometry: PointGeometry | LineGeometry | PolygonGeometry) -> BBox:

@@ -1,7 +1,22 @@
 # Backend
 
-FastAPI-приложение с API `/api/v1` (обзор, события, гари, карта, аналитика) и `GET /health`. Данные сейчас отдаёт демонстрационный репозиторий (`app/demo/`, `app/repositories/demo.py`) с реалистичным набором для Красноярского края; интерфейс репозитория (`app/repositories/base.py`) не завязан на источник, так что подключение PostgreSQL/PostGIS в будущем не потребует менять API. Домены: incidents, observations, burn_scars, forecast_zones, risk_objects, satellite_passes. Подключение к базе и фоновые задачи ещё не реализованы.
+FastAPI-приложение с API `/api/v1` (обзор, события, гари, слои карты, аналитика, LIVE-статус) и `GET /health`. Полный список эндпоинтов — в корневом [README](../README.md).
 
-Локально: `python3 -m venv .venv`, `source .venv/bin/activate`, `pip install -e geo -e backend`, `uvicorn app.main:app --app-dir backend --reload` из корня репозитория. Backend импортирует геоутилиты из `kroma_geo`, поэтому пакет `geo` нужно установить вместе с `backend`.
+Источники данных:
 
-Переменные окружения (см. `.env.example` в корне): `KROMA_DATA_SOURCE` (сейчас только `demo`), `KROMA_CORS_ORIGINS`, необязательный `KROMA_DEMO_ANCHOR` (ISO-время, фиксирует «текущий момент» демо-данных вместо `now()`).
+- **REPLAY** — `app/demo/` + `app/repositories/demo.py`, детерминированный демо-датасет для Красноярского края. Интерфейс `app/repositories/base.py` не завязан на источник, поэтому подключение PostgreSQL/PostGIS в будущем не потребует менять API.
+- **LIVE** — `app/live/`, опрос NASA FIRMS (`firms_client.py`), спатио-темпоральная кластеризация (`clustering.py`) и in-memory кэш с фоновым обновлением (`store.py`), запускается через FastAPI lifespan в `main.py`.
+
+Локально:
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e geo -e backend
+uvicorn app.main:app --app-dir backend --reload
+```
+
+Backend импортирует геоутилиты из `kroma_geo`, поэтому пакет `geo` нужно устанавливать вместе с `backend`.
+
+Переменные окружения — в `.env.example` в корне репозитория (`KROMA_DATA_SOURCE`, `KROMA_CORS_ORIGINS`, `KROMA_DEMO_ANCHOR`, `NASA_FIRMS_API_KEY`, `KROMA_LIVE_*`).
+
+Отдельно, вне LIVE-контура: `app/services/firms.py` + `scripts/ingestion/firms.py` — CLI для офлайн-нормализации выгруженного CSV NASA FIRMS в JSONL по контракту `app/schemas/observations.py`. Используется для подготовки исследовательских выборок, к рантайму API не относится.

@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
-
 from app.models.geometry import BBox, Position
+from pydantic import BaseModel
 
 ObservationClass = Literal["incident", "persistent_source", "unassigned"]
 SourceConfidence = Literal["l", "n", "h"]

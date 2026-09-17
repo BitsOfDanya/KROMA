@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
-
 from app.models.geometry import LineGeometry, PolygonGeometry, Position
+from pydantic import BaseModel
 
 IncidentStatus = Literal["suspected", "confirmed", "monitoring", "localized"]
 Severity = Literal["critical", "high", "medium", "low"]

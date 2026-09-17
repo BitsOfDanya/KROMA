@@ -1,9 +1,8 @@
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel
-
 from app.models.geometry import BBox, LineGeometry, PointGeometry, PolygonGeometry, Position
+from pydantic import BaseModel
 
 RiskObjectKind = Literal["settlement", "power_line", "road", "infrastructure", "protected_area"]
 
