@@ -1,0 +1,357 @@
+.shell {
+  position: fixed;
+  inset: 0;
+  background: var(--background);
+}
+
+.main {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.topBar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 40;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 10px 0 14px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-overlay);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(10px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-right: 6px;
+  color: var(--text);
+}
+
+.wordmark {
+  font-size: 13.5px;
+  font-weight: 650;
+  letter-spacing: 0.24em;
+}
+
+.nav {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+  gap: 2px;
+}
+
+.navLink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.navLink:hover {
+  color: var(--text-secondary);
+}
+
+.navLink[aria-current="page"] {
+  color: var(--text);
+}
+
+.navLink[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -1px;
+  height: 1.5px;
+  background: var(--selected);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.toolGroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+}
+
+.divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border-strong);
+  margin: 0 4px;
+}
+
+.search {
+  position: relative;
+  width: 230px;
+}
+
+.searchInput {
+  width: 100%;
+  height: 30px;
+  padding: 0 34px 0 30px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+  color: var(--text);
+  font-size: 12.5px;
+  transition: border-color var(--duration-fast) var(--ease);
+}
+
+.searchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.searchKbd {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  translate: 0 -50%;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  pointer-events: none;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  z-index: 40;
+  min-width: 100%;
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-panel);
+}
+
+.menu[data-align="right"] {
+  right: 0;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  text-align: left;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+
+.menuItem[data-active="true"],
+.menuItem:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.menuItem[aria-selected="true"] {
+  color: var(--text);
+}
+
+.menuMeta {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.menuHint {
+  padding: 8px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.menuSection {
+  padding: 8px 8px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.regionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 8px 0 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.regionButton:hover,
+.regionButton[aria-expanded="true"] {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 26px;
+  min-width: 0;
+  max-width: 260px;
+  flex-shrink: 1;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.updatedLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--confirmed);
+}
+
+.statusDot[data-state="error"] {
+  background: var(--danger);
+}
+
+.statusDot[data-state="loading"] {
+  background: var(--text-tertiary);
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.avatar:hover,
+.avatar[aria-expanded="true"] {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.userCard {
+  width: 260px;
+  padding: 10px 10px 6px;
+}
+
+.userName {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.userRole {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.teamText {
+  margin: 4px 0 6px;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.shortcutRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.shortcutRow kbd {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 1240px) {
+  .search {
+    width: 200px;
+  }
+
+  .updatedLabel {
+    display: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .search {
+    display: none;
+  }
+
+  .nav {
+    gap: 0;
+  }
+}
