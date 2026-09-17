@@ -10,6 +10,6 @@ export function cameraPadding(container: HTMLElement): PaddingOptions {
   const right = state.selectedIncidentId && !compact ? 460 : 60;
   const bottom = state.timelineExpanded ? 190 : 110;
   const horizontal = Math.max(0, width - left - right);
-  if (horizontal < 240) return { top: 60, bottom, left: 40, right: 40 };
-  return { top: 70, bottom, left, right };
+  if (horizontal < 240) return { top: 78, bottom, left: 40, right: 40 };
+  return { top: 88, bottom, left, right };
 }

@@ -75,8 +75,8 @@ export function LiveIncidentQueue() {
       <div className={overviewStyles.panelBody}>
         {status.data && !status.data.configured && (
           <StateMessage
-            title="Источник не настроен"
-            detail="Задайте NASA_FIRMS_API_KEY на backend, чтобы получать актуальные детекции."
+            title="Источник данных не подключён"
+            detail="Актуальные спутниковые детекции пока недоступны. Переключитесь на «Сценарий» для демонстрации."
           />
         )}
         {status.data?.configured && query.isPending && (

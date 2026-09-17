@@ -64,15 +64,16 @@ export function StatusIndicator() {
 
   const status = live.data;
   const time = status.last_fetch_at;
-  const detail = time && now ? `обновлено ${formatRelative(time, now)}` : status.error ?? undefined;
+  const detail = time && now ? `обновлено ${formatRelative(time, now)}` : !status.configured ? "источник не подключён" : undefined;
   const label = detail ? `${HEALTH_LABEL[status.status]} · ${detail}` : HEALTH_LABEL[status.status];
+  const tooltip = time
+    ? `Последняя загрузка: ${formatExact(time)}\nИсточник: ${status.source}`
+    : status.configured
+      ? (status.error ?? status.source)
+      : `${status.source} ещё не подключён на backend`;
 
   return (
-    <span
-      className={styles.updated}
-      role="status"
-      title={time ? `Последняя загрузка: ${formatExact(time)}\nИсточник: ${status.source}` : status.error ?? status.source}
-    >
+    <span className={styles.updated} role="status" title={tooltip}>
       <span className={styles.statusDot} style={{ background: HEALTH_TONE[status.status] }} />
       <span className={styles.updatedLabel}>{label}</span>
     </span>

@@ -11,7 +11,7 @@
 .rail {
   position: absolute;
   z-index: 10;
-  top: 10px;
+  top: var(--map-inset-top);
   left: 10px;
   display: flex;
   flex-direction: column;
@@ -50,7 +50,7 @@
 .panelSlot {
   position: absolute;
   z-index: 9;
-  top: 10px;
+  top: var(--map-inset-top);
   left: calc(10px + var(--rail-width) + 8px);
   bottom: calc(var(--timeline-current, var(--timeline-height)) + 20px);
   width: var(--panel-width);
@@ -105,7 +105,7 @@
 .modeToggle {
   position: absolute;
   z-index: 8;
-  top: 10px;
+  top: var(--map-inset-top);
   left: 50%;
   translate: -50% 0;
   display: flex;
@@ -136,7 +136,7 @@
 .inspectorSlot {
   position: absolute;
   z-index: 9;
-  top: 10px;
+  top: var(--map-inset-top);
   right: 10px;
   bottom: calc(var(--timeline-current, var(--timeline-height)) + 20px);
   width: var(--inspector-width);
