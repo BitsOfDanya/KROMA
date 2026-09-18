@@ -3,6 +3,9 @@
 import { ArrowDown, ArrowUp, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { Card } from "@/components/ui/Card";
+import { TextField } from "@/components/ui/Field";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ErrorMessage, StateMessage } from "@/components/ui/StateMessage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusGlyph } from "@/components/ui/StatusPill";
@@ -71,24 +74,29 @@ export function EventsTable({ selectedId, onSelect }: { selectedId: string | nul
   const counts = query.data?.counts;
 
   return (
-    <>
-      <header className={styles.header}>
-        <h1 className={styles.headerTitle}>События</h1>
-        <span className={styles.stat}>
-          <strong>{counts?.active ?? "—"}</strong> активных
-        </span>
-        <span className={styles.stat} data-tone="critical">
-          <strong>{counts?.critical ?? "—"}</strong> критических
-        </span>
-        <span className={styles.stat}>
-          <strong>{counts?.new_24h ?? "—"}</strong> новых за 24 ч
-        </span>
-      </header>
-      <div className={styles.toolbar}>
-        <div className={styles.search}>
-          <Search size={14} strokeWidth={1.75} className={styles.searchIcon} />
-          <input
-            className={styles.searchInput}
+    <div className={styles.tableContent}>
+      <PageHeader
+        title="События"
+        description="Оперативная очередь обнаруженных пожаров"
+        meta={
+          <>
+            <span className={styles.stat}>
+              <strong>{counts?.active ?? "—"}</strong> активных
+            </span>
+            <span className={styles.stat} data-tone="critical">
+              <strong>{counts?.critical ?? "—"}</strong> критических
+            </span>
+            <span className={styles.stat}>
+              <strong>{counts?.new_24h ?? "—"}</strong> новых за 24 ч
+            </span>
+          </>
+        }
+      />
+      <Card className={styles.tableCard}>
+        <div className={styles.toolbar}>
+          <TextField
+            className={styles.search}
+            icon={<Search size={17} strokeWidth={1.8} />}
             type="search"
             placeholder="Поиск по ID, району, посёлку"
             aria-label="Поиск событий"
@@ -96,72 +104,72 @@ export function EventsTable({ selectedId, onSelect }: { selectedId: string | nul
             onChange={(event) => setSearch(event.target.value)}
           />
         </div>
-      </div>
-      <div className={styles.tableWrap}>
-        {query.isPending && (
-          <div style={{ padding: 16, display: "grid", gap: 10 }}>
-            {Array.from({ length: 8 }, (_, index) => (
-              <Skeleton key={index} height={16} />
-            ))}
-          </div>
-        )}
-        {query.isError && <ErrorMessage error={query.error} onRetry={() => query.refetch()} retrying={query.isFetching} />}
-        {query.data && rows.length === 0 && <StateMessage title="Ничего не найдено" detail="Измените запрос поиска." />}
-        {rows.length > 0 && (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                {COLUMNS.map((column) => (
-                  <th
-                    key={column.key}
-                    data-sortable="true"
-                    onClick={() => toggleSort(column.key)}
-                    style={column.numeric ? { textAlign: "right" } : undefined}
-                  >
-                    {column.label}
-                    {sort.key === column.key &&
-                      (sort.desc ? (
-                        <ArrowDown size={11} className={styles.sortIcon} />
-                      ) : (
-                        <ArrowUp size={11} className={styles.sortIcon} />
-                      ))}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((item) => (
-                <tr key={item.id} aria-selected={item.id === selectedId} onClick={() => onSelect(item.id)}>
-                  <td className="mono">{item.id}</td>
-                  <td>
-                    <span className={styles.statusCell}>
-                      <StatusGlyph status={item.status} />
-                      {STATUS_LABEL[item.status]}
-                    </span>
-                  </td>
-                  <td>
-                    {item.region}
-                    <div className={styles.cellMuted}>{item.district}</div>
-                  </td>
-                  <td title={formatExact(item.first_detected_at)}>{formatRelative(item.first_detected_at)}</td>
-                  <td className={styles.numeric}>{item.confidence}</td>
-                  <td className={styles.numeric}>{item.threat}</td>
-                  <td className={styles.numeric}>
-                    <span className={styles.priorityCell}>{item.priority}</span>
-                  </td>
-                  <td className={styles.numeric}>{formatArea(item.area_ha)}</td>
-                  <td>
-                    {item.nearest_settlement
-                      ? `${item.nearest_settlement.name} · ${formatDistance(item.nearest_settlement.distance_km)}`
-                      : "—"}
-                  </td>
-                  <td title={formatExact(item.updated_at)}>{formatRelative(item.updated_at)}</td>
-                </tr>
+        <div className={styles.tableWrap}>
+          {query.isPending && (
+            <div style={{ padding: 16, display: "grid", gap: 10 }}>
+              {Array.from({ length: 8 }, (_, index) => (
+                <Skeleton key={index} height={16} />
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </>
+            </div>
+          )}
+          {query.isError && <ErrorMessage error={query.error} onRetry={() => query.refetch()} retrying={query.isFetching} />}
+          {query.data && rows.length === 0 && <StateMessage title="Ничего не найдено" detail="Измените запрос поиска." />}
+          {rows.length > 0 && (
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  {COLUMNS.map((column) => (
+                    <th
+                      key={column.key}
+                      data-sortable="true"
+                      onClick={() => toggleSort(column.key)}
+                      style={column.numeric ? { textAlign: "right" } : undefined}
+                    >
+                      {column.label}
+                      {sort.key === column.key &&
+                        (sort.desc ? (
+                          <ArrowDown size={11} className={styles.sortIcon} />
+                        ) : (
+                          <ArrowUp size={11} className={styles.sortIcon} />
+                        ))}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((item) => (
+                  <tr key={item.id} aria-selected={item.id === selectedId} onClick={() => onSelect(item.id)}>
+                    <td className="mono">{item.id}</td>
+                    <td>
+                      <span className={styles.statusCell}>
+                        <StatusGlyph status={item.status} />
+                        {STATUS_LABEL[item.status]}
+                      </span>
+                    </td>
+                    <td>
+                      {item.region}
+                      <div className={styles.cellMuted}>{item.district}</div>
+                    </td>
+                    <td title={formatExact(item.first_detected_at)}>{formatRelative(item.first_detected_at)}</td>
+                    <td className={styles.numeric}>{item.confidence}</td>
+                    <td className={styles.numeric}>{item.threat}</td>
+                    <td className={styles.numeric}>
+                      <span className={styles.priorityCell}>{item.priority}</span>
+                    </td>
+                    <td className={styles.numeric}>{formatArea(item.area_ha)}</td>
+                    <td>
+                      {item.nearest_settlement
+                        ? `${item.nearest_settlement.name} · ${formatDistance(item.nearest_settlement.distance_km)}`
+                        : "—"}
+                    </td>
+                    <td title={formatExact(item.updated_at)}>{formatRelative(item.updated_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </Card>
+    </div>
   );
 }

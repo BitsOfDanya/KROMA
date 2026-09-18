@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 
@@ -11,37 +10,26 @@ import styles from "./shell.module.css";
 import { StatusIndicator } from "./StatusIndicator";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
-import { Wordmark } from "./Wordmark";
-
-const NAV = [
-  { href: "/", label: "Обзор" },
-  { href: "/events", label: "События" },
-  { href: "/analytics", label: "Аналитика" },
-];
+const PAGE_TITLE: Record<string, string> = {
+  "/": "Обзор",
+  "/events": "События",
+  "/analytics": "Аналитика",
+};
 
 export function TopBar() {
   const pathname = usePathname();
   return (
     <header className={styles.topBar}>
-      <Link href="/" aria-label="KROMA — обзор">
-        <Wordmark />
-      </Link>
-      <nav className={styles.nav} aria-label="Разделы">
-        {NAV.map((item) => (
-          <Link key={item.href} href={item.href} className={styles.navLink} aria-current={pathname === item.href ? "page" : undefined}>
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-      <div className={styles.spacer} />
+      <h1 className={styles.pageTitle}>{PAGE_TITLE[pathname] ?? "KROMA"}</h1>
       <div className={styles.tools}>
         <Suspense>
           <GlobalSearch />
         </Suspense>
         <RegionSelect />
-        <div className={styles.divider} />
-        <ModeSwitch />
-        <StatusIndicator />
+        <div className={styles.contextTools}>
+          <ModeSwitch />
+          <StatusIndicator />
+        </div>
         <div className={styles.toolGroup}>
           <ThemeToggle />
           <UserMenu />

@@ -4,7 +4,10 @@ import { X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
+import { Card, CardHeader } from "@/components/ui/Card";
+import { SelectField, TextField } from "@/components/ui/Field";
 import { IconButton } from "@/components/ui/IconButton";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ErrorMessage, StateMessage } from "@/components/ui/StateMessage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAnalytics, useBurnScar, useOverview } from "@/lib/api/queries";
@@ -48,45 +51,48 @@ export function AnalyticsView() {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        <div className={styles.headRow}>
-          <h1 className={styles.title}>Аналитика</h1>
-          <div className={styles.controls}>
-            <select className={styles.select} value={region ?? ""} onChange={(event) => setParam("region", event.target.value || null)} aria-label="Регион">
+        <PageHeader
+          title="Аналитика"
+          description="Динамика пожаров, площади гарей и региональная статистика"
+          actions={
+            <div className={styles.controls}>
+            <SelectField className={styles.regionSelect} value={region ?? ""} onChange={(event) => setParam("region", event.target.value || null)} aria-label="Регион">
               <option value="">Все регионы</option>
               {overview.data?.regions.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
               ))}
-            </select>
-            <input
-              className={styles.select}
+            </SelectField>
+            <TextField
+              className={styles.dateField}
               type="date"
               aria-label="С"
               value={from}
               max={to}
               onChange={(event) => setParam("from", event.target.value)}
             />
-            <input
-              className={styles.select}
+            <TextField
+              className={styles.dateField}
               type="date"
               aria-label="По"
               value={to}
               min={from}
               onChange={(event) => setParam("to", event.target.value)}
             />
-          </div>
-        </div>
+            </div>
+          }
+        />
 
         {analytics.isError && <ErrorMessage error={analytics.error} onRetry={() => analytics.refetch()} retrying={analytics.isFetching} />}
 
         {analytics.isPending && (
           <div className={styles.metrics}>
             {Array.from({ length: 4 }, (_, index) => (
-              <div key={index} className={styles.metric}>
+              <Card key={index} className={styles.metric} padding="md">
                 <Skeleton width="60%" height={10} />
                 <Skeleton width="40%" height={24} style={{ marginTop: 8 }} />
-              </div>
+              </Card>
             ))}
           </div>
         )}
@@ -94,34 +100,34 @@ export function AnalyticsView() {
         {analytics.data && (
           <>
             <div className={styles.metrics}>
-              <div className={styles.metric}>
+              <Card className={styles.metric} padding="md">
                 <div className={styles.metricLabel}>События</div>
                 <span className={styles.metricValue}>{formatInteger(analytics.data.totals.incidents)}</span>
-              </div>
-              <div className={styles.metric}>
+              </Card>
+              <Card className={styles.metric} padding="md">
                 <div className={styles.metricLabel}>Суммарная площадь гарей</div>
                 <span className={styles.metricValue}>{formatArea(analytics.data.totals.burned_area_ha)}</span>
-              </div>
-              <div className={styles.metric}>
+              </Card>
+              <Card className={styles.metric} padding="md">
                 <div className={styles.metricLabel}>Высокая severity</div>
                 <span className={styles.metricValue}>{formatArea(analytics.data.totals.high_severity_ha)}</span>
                 <div className={styles.metricSub}>{formatPercent(analytics.data.totals.high_severity_share)} от площади</div>
-              </div>
-              <div className={styles.metric}>
+              </Card>
+              <Card className={styles.metric} padding="md">
                 <div className={styles.metricLabel}>Среднее время подтверждения</div>
                 <span className={styles.metricValue}>{formatDuration(analytics.data.totals.mean_confirmation_minutes)}</span>
-              </div>
+              </Card>
             </div>
 
             <div className={styles.grid}>
-              <div className={styles.panel}>
-                <div className={styles.panelHeader}>Площадь гарей и число событий по неделям</div>
+              <Card className={styles.panel}>
+                <CardHeader title="Площадь гарей и число событий по неделям" />
                 <div className={styles.chartBody}>
                   <TrendChart series={analytics.data.series} />
                 </div>
-              </div>
-              <div className={styles.panel}>
-                <div className={styles.panelHeader}>По регионам</div>
+              </Card>
+              <Card className={styles.panel}>
+                <CardHeader title="По регионам" />
                 <ul className={styles.regionList}>
                   {analytics.data.regions.map((item) => {
                     const share = item.burned_area_ha / Math.max(1, analytics.data!.totals.burned_area_ha);
@@ -139,11 +145,11 @@ export function AnalyticsView() {
                     <li style={{ padding: 16, color: "var(--text-tertiary)", fontSize: 12.5 }}>Нет данных</li>
                   )}
                 </ul>
-              </div>
+              </Card>
             </div>
 
-            <div className={styles.panel}>
-              <div className={styles.panelHeader}>Крупнейшие гари</div>
+            <Card className={styles.panel}>
+              <CardHeader title="Крупнейшие гари" />
               {analytics.data.largest_burn_scars.length === 0 ? (
                 <StateMessage title="Нет гарей за период" />
               ) : (
@@ -179,7 +185,7 @@ export function AnalyticsView() {
                   </tbody>
                 </table>
               )}
-            </div>
+            </Card>
           </>
         )}
       </div>

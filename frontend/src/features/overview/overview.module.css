@@ -12,11 +12,11 @@
   position: absolute;
   z-index: 10;
   top: var(--map-inset-top);
-  left: 10px;
+  left: 20px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 4px;
+  gap: 4px;
+  padding: 6px;
   border-radius: var(--radius-lg);
   background: var(--surface-overlay);
   border: 1px solid var(--border);
@@ -51,7 +51,7 @@
   position: absolute;
   z-index: 9;
   top: var(--map-inset-top);
-  left: calc(10px + var(--rail-width) + 8px);
+  left: calc(20px + var(--rail-width) + 12px);
   bottom: calc(var(--timeline-current, var(--timeline-height)) + 20px);
   width: var(--panel-width);
   display: flex;
@@ -84,17 +84,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 8px 10px 14px;
+  min-height: 60px;
+  padding: 12px 12px 12px 20px;
   border-bottom: 1px solid var(--border);
 }
 
 .panelTitle {
   margin: 0;
-  font-size: 11px;
+  font-size: 17px;
   font-weight: 650;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text);
+  letter-spacing: -0.01em;
+  color: var(--heading);
 }
 
 .panelBody {
@@ -137,7 +137,7 @@
   position: absolute;
   z-index: 9;
   top: var(--map-inset-top);
-  right: 10px;
+  right: 20px;
   bottom: calc(var(--timeline-current, var(--timeline-height)) + 20px);
   width: var(--inspector-width);
   display: flex;
@@ -173,4 +173,12 @@
   .inspectorSlot {
     z-index: 11;
   }
+}
+
+@media (max-width: 760px) {
+  .workspace { --panel-width: min(370px, calc(100vw - 92px)); --inspector-width: calc(100vw - 24px); }
+  .rail { left: 12px; top: 12px; }
+  .panelSlot { left: 78px; top: 12px; bottom: calc(var(--timeline-current, var(--timeline-height)) + 18px); }
+  .inspectorSlot { inset: 12px 12px calc(var(--timeline-current, var(--timeline-height)) + 18px); width: auto; z-index: 20; }
+  .modeToggle { display: none; }
 }

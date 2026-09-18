@@ -35,7 +35,7 @@
 .controls {
   position: absolute;
   top: var(--map-inset-top);
-  right: calc(10px + var(--inspector-offset, 0px));
+  right: calc(20px + var(--inspector-offset, 0px));
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -47,9 +47,9 @@
 .controlGroup {
   display: flex;
   flex-direction: column;
-  padding: 3px;
-  gap: 2px;
-  border-radius: var(--radius-md);
+  padding: 6px;
+  gap: 4px;
+  border-radius: 20px;
   background: var(--surface-overlay);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-float);
@@ -64,8 +64,8 @@
 
 .legend {
   width: 212px;
-  padding: 10px 12px 12px;
-  border-radius: var(--radius-md);
+  padding: 14px 16px 16px;
+  border-radius: 20px;
   background: var(--surface-overlay);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-float);
@@ -108,7 +108,7 @@
   z-index: 6;
   min-width: 190px;
   max-width: 260px;
-  padding: 8px 10px;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
   background: var(--surface-overlay);
   border: 1px solid var(--border-strong);
@@ -117,6 +117,11 @@
   font-size: 12px;
   color: var(--text-secondary);
   translate: 14px -50%;
+}
+
+@media (max-width: 760px) {
+  .controls { top: 12px; right: 12px; }
+  .legend { display: none; }
 }
 
 .hoverCard[data-pinned="true"] {
