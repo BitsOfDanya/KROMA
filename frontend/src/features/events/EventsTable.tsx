@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Search } from "lucide-react";
+import { Activity, ArrowDown, ArrowUp, Flame, Search, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Card } from "@/components/ui/Card";
@@ -76,20 +76,24 @@ export function EventsTable({ selectedId, onSelect }: { selectedId: string | nul
   return (
     <div className={styles.tableContent}>
       <PageHeader
+        className={styles.eventsHeader}
         title="События"
         description="Оперативная очередь обнаруженных пожаров"
         meta={
-          <>
+          <div className={styles.stats}>
             <span className={styles.stat}>
-              <strong>{counts?.active ?? "—"}</strong> активных
+              <span className={styles.statIcon}><Activity size={18} /></span>
+              <span className={styles.statText}><strong>{counts?.active ?? "—"}</strong><small>Активных</small></span>
             </span>
             <span className={styles.stat} data-tone="critical">
-              <strong>{counts?.critical ?? "—"}</strong> критических
+              <span className={styles.statIcon}><Flame size={18} /></span>
+              <span className={styles.statText}><strong>{counts?.critical ?? "—"}</strong><small>Критических</small></span>
             </span>
-            <span className={styles.stat}>
-              <strong>{counts?.new_24h ?? "—"}</strong> новых за 24 ч
+            <span className={styles.stat} data-tone="new">
+              <span className={styles.statIcon}><Sparkles size={18} /></span>
+              <span className={styles.statText}><strong>{counts?.new_24h ?? "—"}</strong><small>Новых за 24 ч</small></span>
             </span>
-          </>
+          </div>
         }
       />
       <Card className={styles.tableCard}>

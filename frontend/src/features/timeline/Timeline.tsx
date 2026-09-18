@@ -148,6 +148,7 @@ export function Timeline() {
         <IconButton
           label={expanded ? "Свернуть хронологию" : "Развернуть хронологию"}
           tooltipSide="top"
+          tooltipAlign="end"
           icon={expanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
           onClick={toggleExpanded}
         />

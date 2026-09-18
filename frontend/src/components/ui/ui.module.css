@@ -84,6 +84,13 @@
   translate: -50% 0;
 }
 
+.tooltip[data-side="top"][data-align="end"],
+.tooltip[data-side="bottom"][data-align="end"] {
+  right: 0;
+  left: auto;
+  translate: 0 0;
+}
+
 .segmented {
   display: inline-flex;
   align-items: center;

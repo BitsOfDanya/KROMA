@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Flame, LayoutDashboard, RadioTower } from "lucide-react";
+import { BarChart3, Flame, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -33,14 +33,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className={styles.sidebarFooter}>
-        <span className={styles.sidebarPulse} aria-hidden="true" />
-        <RadioTower size={16} strokeWidth={1.8} />
-        <span>
-          Оперативный контур
-          <small>Спутниковый мониторинг</small>
-        </span>
-      </div>
     </aside>
   );
 }

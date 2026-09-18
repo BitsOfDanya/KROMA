@@ -44,23 +44,56 @@
   overflow: hidden;
 }
 
-.stat {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  white-space: nowrap;
-  font-size: 12px;
-  color: var(--text-secondary);
+.eventsHeader { flex-wrap: wrap; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(132px, 1fr));
+  gap: 10px;
 }
 
+.stat {
+  display: grid;
+  grid-template-columns: 38px auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 142px;
+  padding: 9px 13px 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.statIcon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.statText { display: grid; line-height: 1.15; }
+
 .stat strong {
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 650;
   color: var(--heading);
   font-variant-numeric: tabular-nums;
 }
 
+.stat small {
+  margin-top: 3px;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: var(--text-secondary);
+}
+
+.stat[data-tone="critical"] .statIcon { color: var(--incident-critical); background: color-mix(in srgb, var(--incident-critical) 12%, transparent); }
 .stat[data-tone="critical"] strong { color: var(--incident-critical); }
+.stat[data-tone="new"] .statIcon { color: var(--accent-cyan); background: color-mix(in srgb, var(--accent-cyan) 13%, transparent); }
 
 .tableCard {
   display: flex;
@@ -145,6 +178,8 @@
   .tableColumn[data-split="true"] { width: 55%; }
   .detailColumn { width: 45%; }
   .tableContent { padding: 24px; }
+  .stats { grid-template-columns: repeat(3, minmax(118px, 1fr)); }
+  .stat { min-width: 0; }
 }
 
 @media (max-width: 760px) {
@@ -153,6 +188,7 @@
   .tableColumn[data-split="true"],
   .tableColumn[data-split="false"] { width: 100%; min-height: 100%; }
   .tableContent { min-height: 720px; padding: 20px 16px 24px; }
+  .stats { width: max-content; grid-template-columns: repeat(3, 142px); }
   .detailColumn {
     position: fixed;
     z-index: 30;

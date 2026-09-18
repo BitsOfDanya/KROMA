@@ -8,12 +8,13 @@ interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 
   active?: boolean;
   shortcut?: string;
   tooltipSide?: "right" | "bottom" | "left" | "top";
+  tooltipAlign?: "center" | "end";
   size?: "md" | "sm";
   showTooltip?: boolean;
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { label, icon, active, shortcut, tooltipSide = "bottom", size = "md", showTooltip = true, className, ...props },
+  { label, icon, active, shortcut, tooltipSide = "bottom", tooltipAlign = "center", size = "md", showTooltip = true, className, ...props },
   ref,
 ) {
   return (
@@ -28,7 +29,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
     >
       {icon}
       {showTooltip && (
-        <span className={styles.tooltip} data-side={tooltipSide} aria-hidden="true">
+        <span className={styles.tooltip} data-side={tooltipSide} data-align={tooltipAlign} aria-hidden="true">
           {label}
           {shortcut && <kbd>{shortcut}</kbd>}
         </span>
