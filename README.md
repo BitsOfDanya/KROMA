@@ -82,6 +82,24 @@ docker compose up --build
 - Frontend: http://localhost:3000
 - Backend: http://localhost:8000 (`/health`, `/docs`)
 
+## Production и автодеплой
+
+Production-стек описан в `docker-compose.prod.yml`: Caddy принимает HTTP на
+порту 80, маршрутизирует API в FastAPI и остальные запросы в production-сборку
+Next.js. Пример ручного запуска:
+
+```bash
+cp .env.example .env
+# задать POSTGRES_PASSWORD, DATABASE_URL и публичный origin в KROMA_CORS_ORIGINS
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Файлы `deploy/systemd/kroma-deploy.{service,timer}` запускают
+`deploy/deploy.sh` раз в минуту. Скрипт сравнивает развёрнутую ревизию с
+`origin/main`, поэтому сборка и перезапуск происходят только после нового
+коммита в `main`; при неуспешной проверке здоровья выполняется откат к
+предыдущей ревизии.
+
 ### Без Docker
 
 Backend:
