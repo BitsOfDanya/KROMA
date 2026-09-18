@@ -30,7 +30,8 @@ rollback() {
   if [[ -n "${previous_release}" && -f "${previous_release}/${COMPOSE_FILE}" ]]; then
     echo "Rolling back to ${previous_release}."
     cd "${previous_release}"
-    docker compose -p kroma -f "${COMPOSE_FILE}" build
+    KROMA_REVISION="$(basename "${previous_release}")" \
+      docker compose -p kroma -f "${COMPOSE_FILE}" build
     docker compose -p kroma -f "${COMPOSE_FILE}" up -d --remove-orphans
   fi
   exit "${exit_code}"
@@ -38,6 +39,7 @@ rollback() {
 trap rollback ERR
 
 cd "${RELEASE_DIR}"
+export KROMA_REVISION="${REVISION}"
 docker compose -p kroma -f "${COMPOSE_FILE}" build --pull
 docker compose -p kroma -f "${COMPOSE_FILE}" up -d --remove-orphans
 
