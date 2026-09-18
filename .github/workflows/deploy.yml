@@ -1,0 +1,49 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.KROMA_DEPLOY_SSH_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/kroma_deploy
+          chmod 600 ~/.ssh/kroma_deploy
+          cat >> ~/.ssh/known_hosts <<'EOF'
+          5.129.225.86 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHMeXtjJrAroT3ONRiH7ZrdlU1Xf6DDpXocK47wo5CKJ
+          EOF
+
+      - name: Package release
+        run: git archive --format=tar.gz --output="/tmp/kroma-${GITHUB_SHA}.tar.gz" HEAD
+
+      - name: Upload and activate release
+        run: |
+          ssh_options=(-i ~/.ssh/kroma_deploy -o IdentitiesOnly=yes)
+          archive="/tmp/kroma-${GITHUB_SHA}.tar.gz"
+          remote_archive="/opt/kroma/incoming/${GITHUB_SHA}.tar.gz"
+          ssh "${ssh_options[@]}" kroma-deploy@5.129.225.86 \
+            "mkdir -p /opt/kroma/incoming /opt/kroma/releases/${GITHUB_SHA}"
+          scp "${ssh_options[@]}" "$archive" \
+            "kroma-deploy@5.129.225.86:${remote_archive}"
+          ssh "${ssh_options[@]}" kroma-deploy@5.129.225.86 \
+            "tar -xzf '${remote_archive}' -C '/opt/kroma/releases/${GITHUB_SHA}' \
+             && ln -sfn /opt/kroma/shared/.env '/opt/kroma/releases/${GITHUB_SHA}/.env' \
+             && rm -f '${remote_archive}' \
+             && '/opt/kroma/releases/${GITHUB_SHA}/deploy/activate-release.sh' '${GITHUB_SHA}'"

@@ -94,11 +94,12 @@ cp .env.example .env
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-Файлы `deploy/systemd/kroma-deploy.{service,timer}` запускают
-`deploy/deploy.sh` раз в минуту. Скрипт сравнивает развёрнутую ревизию с
-`origin/main`, поэтому сборка и перезапуск происходят только после нового
-коммита в `main`; при неуспешной проверке здоровья выполняется откат к
-предыдущей ревизии.
+Workflow `.github/workflows/deploy.yml` запускает развёртывание после каждого
+коммита в `main`. Он передаёт на сервер архив конкретной Git-ревизии, а
+`deploy/activate-release.sh` собирает и запускает её. Для workflow требуется
+repository secret `KROMA_DEPLOY_SSH_KEY`; сервер принимает этот отдельный ключ
+пользователя `kroma-deploy`. При неуспешной проверке здоровья выполняется откат
+к предыдущей ревизии.
 
 ### Без Docker
 
