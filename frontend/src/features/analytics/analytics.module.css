@@ -17,6 +17,20 @@
   gap: 8px;
 }
 
+.analysisLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: var(--text-inverse);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .regionSelect { width: 170px; }
 .dateField { width: 142px; }
 
@@ -249,6 +263,7 @@
   .container { padding: 20px 16px 36px; }
   .controls { width: 100%; flex-wrap: wrap; }
   .regionSelect { width: 100%; }
+  .analysisLink { width: 100%; }
   .dateField { flex: 1; min-width: 130px; }
   .metrics { grid-template-columns: 1fr; gap: 12px; margin-top: 20px; }
   .metric { min-height: 104px; }

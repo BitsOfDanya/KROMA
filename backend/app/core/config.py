@@ -2,6 +2,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 DataSource = Literal["demo"]
@@ -32,6 +33,10 @@ class Settings:
     live_cluster_radius_km: float = 6.0
     live_cluster_window_hours: float = 48.0
     live_retention_hours: float = 72.0
+    prepared_data_path: Path = Path(__file__).resolve().parents[1] / "prepared_data"
+    analysis_max_days: int = 366
+    analysis_max_area_ha: float = 5_000_000
+    analysis_max_features: int = 50_000
 
 
 @lru_cache
@@ -39,6 +44,7 @@ def get_settings() -> Settings:
     source = os.environ.get("KROMA_DATA_SOURCE", "demo")
     if source != "demo":
         raise RuntimeError(f"Unsupported KROMA_DATA_SOURCE: {source}")
+    prepared_data_path = os.environ.get("KROMA_PREPARED_DATA_PATH", "").strip()
     return Settings(
         data_source="demo",
         cors_origins=_split_csv(
@@ -62,4 +68,14 @@ def get_settings() -> Settings:
         live_cluster_radius_km=float(os.environ.get("KROMA_LIVE_CLUSTER_RADIUS_KM", "6")),
         live_cluster_window_hours=float(os.environ.get("KROMA_LIVE_CLUSTER_WINDOW_HOURS", "48")),
         live_retention_hours=float(os.environ.get("KROMA_LIVE_RETENTION_HOURS", "72")),
+        prepared_data_path=(
+            Path(prepared_data_path)
+            if prepared_data_path
+            else Path(__file__).resolve().parents[1] / "prepared_data"
+        ),
+        analysis_max_days=int(os.environ.get("KROMA_ANALYSIS_MAX_DAYS", "366")),
+        analysis_max_area_ha=float(
+            os.environ.get("KROMA_ANALYSIS_MAX_AREA_HA", "5000000")
+        ),
+        analysis_max_features=int(os.environ.get("KROMA_ANALYSIS_MAX_FEATURES", "50000")),
     )

@@ -26,8 +26,10 @@ export function TopBar() {
         </Suspense>
         <RegionSelect />
         <div className={styles.contextTools}>
-          <ModeSwitch />
-          <StatusIndicator />
+          <Suspense>
+            <ModeSwitch />
+            <StatusIndicator />
+          </Suspense>
         </div>
         <div className={styles.toolGroup}>
           <ThemeToggle />

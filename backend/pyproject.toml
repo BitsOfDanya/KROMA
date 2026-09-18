@@ -11,3 +11,6 @@ dependencies = ["fastapi>=0.115,<1", "httpx>=0.28,<1", "kroma-geo", "pydantic>=2
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+
+[tool.setuptools.package-data]
+app = ["prepared_data/*.json"]

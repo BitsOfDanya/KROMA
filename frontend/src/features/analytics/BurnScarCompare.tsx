@@ -70,7 +70,7 @@ export function BurnScarCompare({ scar }: { scar: BurnScar }) {
               whiteSpace: "nowrap",
             }}
           >
-            ДО · {scar.before.satellite}
+            ОБЗОРНАЯ ПОДЛОЖКА
           </span>
           <span
             style={{
@@ -86,12 +86,12 @@ export function BurnScarCompare({ scar }: { scar: BurnScar }) {
               whiteSpace: "nowrap",
             }}
           >
-            ПОСЛЕ · оценка выгорания
+            КЛАССИФИКАЦИЯ · DEMO
           </span>
         </div>
         <p style={{ marginTop: 8, fontSize: 11.5, color: "var(--text-tertiary)" }}>
-          {scar.before.satellite} {formatDateLong(scar.before.acquired_on)} · облачность {scar.before.cloud_cover_pct}% — 
-          {" "}{scar.after.satellite} {formatDateLong(scar.after.acquired_on)} · облачность {scar.after.cloud_cover_pct}%
+          Подложка не является снимком указанной сцены. Метаданные сценария: {scar.before.satellite}
+          {" "}{formatDateLong(scar.before.acquired_on)} — {scar.after.satellite} {formatDateLong(scar.after.acquired_on)}.
         </p>
       </div>
       <div className={styles.compareStats}>

@@ -345,3 +345,16 @@
   .regionButton { display: none; }
   .avatar { width: 42px; height: 42px; }
 }
+.preparedMode {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}

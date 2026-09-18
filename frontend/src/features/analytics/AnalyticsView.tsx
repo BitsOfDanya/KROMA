@@ -1,6 +1,7 @@
 "use client";
 
 import { Activity, Clock3, Flame, Trees, X } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
@@ -57,6 +58,7 @@ export function AnalyticsView() {
           description="Как меняется ситуация: события, последствия и время реагирования."
           actions={
             <div className={styles.controls}>
+            <Link className={styles.analysisLink} href="/analytics?tab=area">Анализ территории</Link>
             <SelectField className={styles.regionSelect} value={region ?? ""} onChange={(event) => setParam("region", event.target.value || null)} aria-label="Регион">
               <option value="">Все регионы</option>
               {overview.data?.regions.map((item) => (
@@ -183,7 +185,7 @@ export function AnalyticsView() {
       </div>
 
       {scarId && (
-        <div className={styles.overlay} role="dialog" aria-modal="true" aria-label="Сравнение до и после">
+        <div className={styles.overlay} role="dialog" aria-modal="true" aria-label="Подложка и демонстрационный результат классификации">
           <div className={styles.dialog}>
             <div className={styles.dialogHeader}>
               <div>

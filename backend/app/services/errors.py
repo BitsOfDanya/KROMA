@@ -3,3 +3,11 @@ class NotFoundError(LookupError):
         super().__init__(f"{entity} {identifier} not found")
         self.entity = entity
         self.identifier = identifier
+
+
+class DatasetUnavailableError(RuntimeError):
+    pass
+
+
+class ResultConflictError(RuntimeError):
+    pass

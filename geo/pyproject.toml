@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "kroma-geo"
 version = "0.1.0"
 requires-python = ">=3.12"
+dependencies = ["pyproj>=3.7,<4", "shapely>=2.0,<3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

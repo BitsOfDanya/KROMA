@@ -24,7 +24,16 @@ export const queryKeys = {
   liveStatus: ["live", "status"] as const,
   liveHotspots: (bbox: BBox | null) => ["live", "hotspots", bbox] as const,
   liveIncidents: (bbox: BBox | null) => ["live", "incidents", bbox] as const,
+  analysisDatasets: ["analysis", "datasets"] as const,
 };
+
+export function useAnalysisDatasets() {
+  return useQuery({
+    queryKey: queryKeys.analysisDatasets,
+    queryFn: ({ signal }) => api.analysis.datasets(signal),
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+}
 
 const LIVE_POLL_MS = Number(process.env.NEXT_PUBLIC_LIVE_POLL_SECONDS ?? 60) * 1000;
 

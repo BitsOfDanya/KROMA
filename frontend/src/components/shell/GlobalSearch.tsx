@@ -20,6 +20,8 @@ export function GlobalSearch() {
   const incidents = useIncidents();
   const router = useRouter();
   const pathname = usePathname();
+  const appMode = useWorkspace((state) => state.appMode);
+  const liveUnsupported = pathname === "/" && appMode === "live";
   const close = useCallback(() => setOpen(false), []);
   useDismiss(wrapperRef, open, close);
 
@@ -65,8 +67,10 @@ export function GlobalSearch() {
         ref={inputRef}
         className={styles.searchInput}
         type="search"
-        placeholder="Найти событие…"
-        aria-label="Поиск событий"
+        placeholder={liveUnsupported ? "Поиск LIVE недоступен" : "Найти в демосценарии…"}
+        aria-label={liveUnsupported ? "Поиск по LIVE-событиям пока недоступен" : "Поиск событий демосценария"}
+        disabled={liveUnsupported}
+        title={liveUnsupported ? "Глобальный поиск подключён только к демонстрационному репозиторию" : undefined}
         role="combobox"
         aria-expanded={open && query.length > 0}
         aria-controls="global-search-results"
@@ -92,7 +96,7 @@ export function GlobalSearch() {
           }
         }}
       />
-      {!query && <span className={styles.searchKbd}>/</span>}
+      {!query && !liveUnsupported && <span className={styles.searchKbd}>/</span>}
       {open && query.trim() && (
         <div className={styles.menu} id="global-search-results" role="listbox" style={{ width: 320 }}>
           {results.length === 0 && <div className={styles.menuHint}>Ничего не найдено</div>}

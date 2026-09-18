@@ -1,0 +1,83 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "ZONE-A-OLD-LOW",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[99.045, 58.045], [99.070, 58.045], [99.070, 58.070], [99.045, 58.070], [99.045, 58.045]]]
+      },
+      "properties": {
+        "id": "ZONE-A-OLD-LOW",
+        "burn_event_id": "BURN-A",
+        "assessment_id": "ASSESS-A-20240812",
+        "class_id": 1,
+        "severity": "low",
+        "after_acquired_at": "2024-08-12T06:00:00Z",
+        "is_complete": true,
+        "scene_ids": ["SYNTH-AFTER-20240812"]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ZONE-A-NEW-LOW",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[99.040, 58.040], [99.080, 58.040], [99.080, 58.080], [99.040, 58.080], [99.040, 58.040]],
+          [[99.052, 58.052], [99.062, 58.052], [99.062, 58.062], [99.052, 58.062], [99.052, 58.052]]
+        ]
+      },
+      "properties": {
+        "id": "ZONE-A-NEW-LOW",
+        "burn_event_id": "BURN-A",
+        "assessment_id": "ASSESS-A-20240815",
+        "class_id": 1,
+        "severity": "low",
+        "after_acquired_at": "2024-08-15T06:00:00Z",
+        "is_complete": true,
+        "scene_ids": ["SYNTH-BEFORE-20240801", "SYNTH-AFTER-20240815"]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ZONE-A-NEW-MODERATE",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[99.080, 58.040], [99.120, 58.040], [99.120, 58.080], [99.080, 58.080], [99.080, 58.040]]]
+      },
+      "properties": {
+        "id": "ZONE-A-NEW-MODERATE",
+        "burn_event_id": "BURN-A",
+        "assessment_id": "ASSESS-A-20240815",
+        "class_id": 2,
+        "severity": "moderate",
+        "after_acquired_at": "2024-08-15T06:00:00Z",
+        "is_complete": true,
+        "scene_ids": ["SYNTH-BEFORE-20240801", "SYNTH-AFTER-20240815"]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ZONE-A-NEW-HIGH",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[[99.040, 58.080], [99.060, 58.080], [99.060, 58.100], [99.040, 58.100], [99.040, 58.080]]],
+          [[[99.065, 58.085], [99.080, 58.085], [99.080, 58.100], [99.065, 58.100], [99.065, 58.085]]]
+        ]
+      },
+      "properties": {
+        "id": "ZONE-A-NEW-HIGH",
+        "burn_event_id": "BURN-A",
+        "assessment_id": "ASSESS-A-20240815",
+        "class_id": 3,
+        "severity": "high",
+        "after_acquired_at": "2024-08-15T06:00:00Z",
+        "is_complete": true,
+        "scene_ids": ["SYNTH-BEFORE-20240801", "SYNTH-AFTER-20240815"]
+      }
+    }
+  ]
+}

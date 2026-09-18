@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "kroma-ci-demo",
+  "dataset_version": "1.0.0",
+  "name": "KROMA: проверочный набор анализа",
+  "description": "Малый синтетический набор для CI и демонстрации контракта. Не является выходом модели или наблюдениями реального пожара.",
+  "origin": "synthetic_demo",
+  "processing_version": "fixture-vectorizer-1.0.0",
+  "available_from": "2024-08-01",
+  "available_to": "2024-08-31",
+  "extent": [99.0, 58.0, 99.2, 58.2],
+  "af_coverage": {"type": "Polygon", "coordinates": [[[99.0, 58.0], [99.2, 58.0], [99.2, 58.2], [99.0, 58.2], [99.0, 58.0]]]},
+  "bs_coverage": {"type": "Polygon", "coordinates": [[[99.0, 58.0], [99.15, 58.0], [99.15, 58.15], [99.0, 58.15], [99.0, 58.0]]]},
+  "bs_valid_coverage": {"type": "Polygon", "coordinates": [[[99.02, 58.02], [99.14, 58.02], [99.14, 58.14], [99.02, 58.14], [99.02, 58.02]]]},
+  "area_crs": "EPSG:6933",
+  "source_crs": "EPSG:4326",
+  "mask": {
+    "classes": {"0": "unburned", "1": "low", "2": "moderate", "3": "high"},
+    "nodata": 255,
+    "resolution_m": [20, 20],
+    "validity": "bs_valid_coverage polygon"
+  },
+  "observation_source": "Synthetic CI fixture",
+  "temporal_rule": "Hotspots use acquired_at; burn zones use after_acquired_at; both use inclusive UTC calendar dates.",
+  "license": "CC0-1.0 for the synthetic fixture",
+  "attribution": "KROMA synthetic CI fixture",
+  "distribution": "May be redistributed; do not present as model output or real observations.",
+  "example": {
+    "bbox": [99.03, 58.03, 99.13, 58.13],
+    "from": "2024-08-10",
+    "to": "2024-08-20"
+  },
+  "scenes": [
+    {"scene_id": "SYNTH-BEFORE-20240801", "satellite": "TEST-SAT", "acquired_at": "2024-08-01T06:00:00Z", "role": "before", "cloud_cover_pct": 0.0},
+    {"scene_id": "SYNTH-AFTER-20240812", "satellite": "TEST-SAT", "acquired_at": "2024-08-12T06:00:00Z", "role": "after", "cloud_cover_pct": 0.0},
+    {"scene_id": "SYNTH-AFTER-20240815", "satellite": "TEST-SAT", "acquired_at": "2024-08-15T06:00:00Z", "role": "after", "cloud_cover_pct": 0.0}
+  ],
+  "artifacts": {
+    "hotspots": {"path": "hotspots.geojson", "sha256": "9761aa0c5d5084cff98a9722029b51255431ca25802f729e4cdd1288ff32a295"},
+    "burn_zones": {"path": "burn_zones.geojson", "sha256": "a8633f2043dcb3a4d4aca526b29b7230ed032ad1e947f5f0552a8018d598676e"}
+  }
+}

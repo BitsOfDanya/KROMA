@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import { useLiveStatus } from "@/lib/api/queries";
 import type { LiveHealth } from "@/lib/api/types";
@@ -24,6 +25,8 @@ const HEALTH_TONE: Record<LiveHealth, string> = {
 };
 
 export function StatusIndicator() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const appMode = useWorkspace((state) => state.appMode);
   const live = useLiveStatus();
   const [now, setNow] = useState<number | null>(null);
@@ -34,6 +37,24 @@ export function StatusIndicator() {
     const timer = window.setInterval(tick, 30_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  if (pathname === "/analytics" && searchParams.get("tab") === "area") {
+    return (
+      <span className={styles.updated} role="status" title="Источник и версия фиксируются выбранным набором">
+        <span className={styles.statusDot} style={{ background: "var(--observation)" }} />
+        <span className={styles.updatedLabel}>Источник указан в наборе</span>
+      </span>
+    );
+  }
+
+  if (pathname !== "/") {
+    return (
+      <span className={styles.updated} role="status" title="Раздел использует фиксированный DemoFireRepository">
+        <span className={styles.statusDot} style={{ background: "var(--text-tertiary)" }} />
+        <span className={styles.updatedLabel}>Демоданные</span>
+      </span>
+    );
+  }
 
   if (appMode === "replay") {
     return (

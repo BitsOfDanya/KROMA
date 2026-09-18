@@ -162,7 +162,7 @@ export interface TimelineResponse {
 }
 
 export interface Geometry {
-  type: "Point" | "LineString" | "Polygon";
+  type: "Point" | "LineString" | "Polygon" | "MultiPolygon";
   coordinates: unknown;
 }
 
@@ -281,4 +281,108 @@ export interface LiveStatus {
   detection_count: number;
   incident_count: number;
   error: string | null;
+}
+
+export type AnalysisOrigin = "model_output" | "reference" | "synthetic_demo";
+export type CoverageStatus = "full" | "partial" | "none";
+
+export interface AnalysisQuery {
+  datasetId: string;
+  datasetVersion: string;
+  bbox: BBox;
+  from: string;
+  to: string;
+}
+
+export interface AnalysisExample {
+  bbox: BBox;
+  from: string;
+  to: string;
+}
+
+export interface AnalysisDataset {
+  dataset_id: string;
+  dataset_version: string;
+  name: string;
+  description: string;
+  origin: AnalysisOrigin;
+  processing_version: string;
+  available_from: string;
+  available_to: string;
+  extent: BBox;
+  example: AnalysisExample;
+  scene_ids: string[];
+  attribution: string;
+  license: string;
+  limitations: string[];
+}
+
+export interface AnalysisDatasetCatalog {
+  schema_version: "1.0";
+  items: AnalysisDataset[];
+}
+
+export interface AnalysisSourceCoverage {
+  status: CoverageStatus;
+  covered_area_ha: number | null;
+  valid_area_ha: number | null;
+}
+
+export interface AnalysisCoverage {
+  status: CoverageStatus;
+  query_area_ha: number;
+  covered_area_ha: number | null;
+  valid_area_ha: number | null;
+  active_fire: AnalysisSourceCoverage;
+  burn_scars: AnalysisSourceCoverage;
+  method: string;
+}
+
+export interface AnalysisSeverity {
+  class_id: 1 | 2 | 3;
+  label: string;
+  severity: BurnSeverity;
+  area_ha: number | null;
+  share: number | null;
+}
+
+export interface AnalysisResult {
+  schema_version: "1.0";
+  result_id: string;
+  request: {
+    dataset_id: string;
+    dataset_version: string;
+    bbox: BBox;
+    from: string;
+    to: string;
+  };
+  provenance: {
+    origin: AnalysisOrigin;
+    processing_version: string;
+    scene_ids: string[];
+    observation_source: string;
+    attribution: string;
+    license: string;
+    temporal_rule: string;
+  };
+  coverage: AnalysisCoverage;
+  summary: {
+    status: "ok" | "empty" | "no_coverage" | "no_valid_data";
+    hotspot_count: number;
+    burn_scar_count: number;
+    zone_count: number;
+    total_burned_area_ha: number | null;
+    severity: AnalysisSeverity[];
+  };
+  hotspots: FeatureCollection<Record<string, unknown>>;
+  burn_zones: FeatureCollection<Record<string, unknown>>;
+  warnings: { code: string; message: string }[];
+  calculation: {
+    area_method: string;
+    area_crs: string;
+    clipping_rule: string;
+    deduplication_rule: string;
+    precision: string;
+  };
+  generated_at: string;
 }
