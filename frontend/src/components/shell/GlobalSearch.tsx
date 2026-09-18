@@ -65,7 +65,7 @@ export function GlobalSearch() {
         ref={inputRef}
         className={styles.searchInput}
         type="search"
-        placeholder="Поиск: KR-042, район, посёлок"
+        placeholder="Найти событие…"
         aria-label="Поиск событий"
         role="combobox"
         aria-expanded={open && query.length > 0}

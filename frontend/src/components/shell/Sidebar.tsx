@@ -8,9 +8,9 @@ import styles from "./shell.module.css";
 import { Wordmark } from "./Wordmark";
 
 const NAV = [
-  { href: "/", label: "Обзор", icon: LayoutDashboard },
-  { href: "/events", label: "События", icon: Flame },
-  { href: "/analytics", label: "Аналитика", icon: BarChart3 },
+  { href: "/", label: "Обзор", description: "Вся картина на карте", icon: LayoutDashboard },
+  { href: "/events", label: "События", description: "Что требует внимания", icon: Flame },
+  { href: "/analytics", label: "Аналитика", description: "Динамика и последствия", icon: BarChart3 },
 ];
 
 export function Sidebar() {
@@ -26,9 +26,9 @@ export function Sidebar() {
           const Icon = item.icon;
           const active = pathname === item.href;
           return (
-            <Link key={item.href} href={item.href} className={styles.sideLink} aria-current={active ? "page" : undefined}>
+            <Link key={item.href} href={item.href} className={styles.sideLink} aria-label={item.label} aria-current={active ? "page" : undefined}>
               <Icon size={21} strokeWidth={1.8} />
-              <span>{item.label}</span>
+              <span>{item.label}<small className={styles.sideDescription}>{item.description}</small></span>
             </Link>
           );
         })}

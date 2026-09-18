@@ -11,7 +11,7 @@ import styles from "./shell.module.css";
 
 const HEALTH_LABEL: Record<LiveHealth, string> = {
   live: "Онлайн",
-  nrt: "NRT",
+  nrt: "С небольшой задержкой",
   stale: "Данные устарели",
   offline: "Нет связи",
 };
@@ -37,9 +37,9 @@ export function StatusIndicator() {
 
   if (appMode === "replay") {
     return (
-      <span className={styles.updated} role="status">
+      <span className={styles.updated} role="status" title="Показан демонстрационный сценарий с фиксированными данными">
         <span className={styles.statusDot} style={{ background: "var(--text-tertiary)" }} />
-        <span className={styles.updatedLabel}>Сценарий · фиксированные данные</span>
+        <span className={styles.updatedLabel}>Демоданные</span>
       </span>
     );
   }
@@ -57,7 +57,7 @@ export function StatusIndicator() {
     return (
       <span className={styles.updated} role="status">
         <span className={styles.statusDot} data-state="error" />
-        <span className={styles.updatedLabel}>API недоступен</span>
+        <span className={styles.updatedLabel}>Нет связи с сервером</span>
       </span>
     );
   }
@@ -70,7 +70,7 @@ export function StatusIndicator() {
     ? `Последняя загрузка: ${formatExact(time)}\nИсточник: ${status.source}`
     : status.configured
       ? (status.error ?? status.source)
-      : `${status.source} ещё не подключён на backend`;
+      : `Источник ${status.source} пока не подключён. Настройку выполняет администратор.`;
 
   return (
     <span className={styles.updated} role="status" title={tooltip}>

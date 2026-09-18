@@ -16,7 +16,7 @@ import { useWorkspace } from "@/state/workspace";
 import { IncidentDetails } from "./IncidentDetails";
 import styles from "./incidents.module.css";
 
-export function IncidentInspector({ incidentId }: { incidentId: string }) {
+export function IncidentInspector({ incidentId, onClose }: { incidentId: string; onClose?: () => void }) {
   const query = useIncident(incidentId);
   const cursor = useWorkspace((state) => state.cursor);
   const selectIncident = useWorkspace((state) => state.selectIncident);
@@ -30,7 +30,7 @@ export function IncidentInspector({ incidentId }: { incidentId: string }) {
           <span className={styles.inspectorId}>{incidentId}</span>
           {state && <StatusPill status={state.status} />}
           <span style={{ flex: 1 }} />
-          <IconButton label="Закрыть инспектор" size="sm" showTooltip={false} icon={<X size={15} />} onClick={() => selectIncident(null)} />
+          <IconButton label="Закрыть карточку события" size="sm" showTooltip={false} icon={<X size={15} />} onClick={onClose ?? (() => selectIncident(null))} />
         </div>
         {detail && state ? (
           <>

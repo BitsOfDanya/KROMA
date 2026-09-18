@@ -29,7 +29,7 @@ export function EventsView() {
       </div>
       {selectedId && (
         <div className={styles.detailColumn}>
-          <IncidentInspector incidentId={selectedId} />
+          <IncidentInspector incidentId={selectedId} onClose={() => setSelectedId(null)} />
         </div>
       )}
     </div>

@@ -20,7 +20,10 @@ export function TopBar() {
   const pathname = usePathname();
   return (
     <header className={styles.topBar}>
-      <h1 className={styles.pageTitle}>{PAGE_TITLE[pathname] ?? "KROMA"}</h1>
+      <div className={styles.pageIdentity}>
+        <span className={styles.pageEyebrow}>Мониторинг пожаров</span>
+        <div className={styles.pageTitle}>{PAGE_TITLE[pathname] ?? "KROMA"}</div>
+      </div>
       <div className={styles.tools}>
         <Suspense>
           <GlobalSearch />

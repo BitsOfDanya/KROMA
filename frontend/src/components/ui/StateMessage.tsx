@@ -38,12 +38,10 @@ export function ErrorMessage({
   align?: "start" | "center";
 }) {
   const network = error instanceof ApiError && error.isNetworkError;
-  const title = network ? "API недоступен" : "Не удалось загрузить данные";
+  const title = network ? "Не удаётся связаться с сервером" : "Не удалось загрузить данные";
   const detail = network
-    ? "Сервер KROMA не отвечает. Проверьте, что backend запущен на порту 8000."
-    : error instanceof Error
-      ? error.message
-      : undefined;
+    ? "Проверьте подключение к интернету и попробуйте ещё раз."
+    : "Попробуйте обновить данные чуть позже. Если ошибка повторится, обратитесь к администратору.";
   return (
     <StateMessage
       tone="error"
@@ -54,7 +52,7 @@ export function ErrorMessage({
         onRetry && (
           <button type="button" className={styles.textButton} onClick={onRetry} disabled={retrying}>
             <RotateCw size={13} strokeWidth={1.75} />
-            {retrying ? "Повтор…" : "Повторить"}
+            {retrying ? "Загружаем…" : "Попробовать снова"}
           </button>
         )
       }

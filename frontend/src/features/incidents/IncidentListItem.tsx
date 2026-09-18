@@ -28,7 +28,7 @@ export const IncidentListItem = memo(function IncidentListItem({ incident, state
         data-hidden={!state.visible}
         onClick={() => onSelect(incident.id)}
       >
-        <span className={styles.priority} title={`Priority ${state.priority}`}>
+        <span className={styles.priority} title={`Приоритет: ${state.priority} из 100`}>
           <span className={styles.priorityValue}>{state.visible ? state.priority : "—"}</span>
           <SeverityMark severity={state.severity} />
         </span>
@@ -37,7 +37,7 @@ export const IncidentListItem = memo(function IncidentListItem({ incident, state
           <span className={styles.itemDistrict}>{incident.district}</span>
         </span>
         <span className={styles.itemSide}>
-          {incident.is_new ? <span className={styles.newTag}>NEW</span> : <span />}
+          {incident.is_new ? <span className={styles.newTag}>Новое</span> : <span />}
           <span title={formatExact(incident.updated_at)}>{formatRelative(incident.updated_at, now)}</span>
         </span>
         <span className={styles.itemMeta}>

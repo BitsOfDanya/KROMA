@@ -11,9 +11,9 @@ function barColor(value: number) {
 }
 
 const METRICS = [
-  { key: "confidence", label: "Confidence", hint: "Достоверность того, что это лесной пожар" },
-  { key: "threat", label: "Threat", hint: "Угроза объектам и населению" },
-  { key: "priority", label: "Priority", hint: "Итоговый приоритет реагирования" },
+  { key: "confidence", label: "Достоверность", hint: "Достоверность того, что это лесной пожар, от 0 до 100" },
+  { key: "threat", label: "Угроза", hint: "Угроза объектам и населению, от 0 до 100" },
+  { key: "priority", label: "Приоритет", hint: "Итоговый приоритет реагирования, от 0 до 100" },
 ] as const;
 
 export function PriorityMetrics({ state }: { state: IncidentState }) {

@@ -59,7 +59,7 @@ export function LiveIncidentQueue() {
       <div className={styles.summary}>
         <div className={styles.summaryCell}>
           <span className={styles.summaryValue}>{query.data ? rows.length : "—"}</span>
-          <span className={styles.summaryLabel}>Кластеров</span>
+          <span className={styles.summaryLabel}>Очагов</span>
         </div>
         <div className={styles.summaryCell}>
           <span className={styles.summaryValue} data-tone={critical ? "critical" : undefined}>
@@ -76,7 +76,8 @@ export function LiveIncidentQueue() {
         {status.data && !status.data.configured && (
           <StateMessage
             title="Источник данных не подключён"
-            detail="Актуальные спутниковые детекции пока недоступны. Переключитесь на «Сценарий» для демонстрации."
+            detail="Спутниковые данные появятся после подключения источника. А пока можно посмотреть, как работает система, в режиме «Сценарий»."
+            action={<button type="button" className={styles.footerButton} onClick={() => useWorkspace.getState().setAppMode("replay")}>Посмотреть сценарий</button>}
           />
         )}
         {status.data?.configured && query.isPending && (
@@ -94,7 +95,7 @@ export function LiveIncidentQueue() {
         )}
         {query.isError && <ErrorMessage error={query.error} onRetry={() => query.refetch()} retrying={query.isFetching} />}
         {status.data?.configured && query.data && rows.length === 0 && (
-          <StateMessage title="Нет активных детекций" detail="За окно ретенции ничего не обнаружено." />
+          <StateMessage title="Новых очагов не обнаружено" detail="За выбранный период спутники не зафиксировали активных очагов." />
         )}
         {rows.length > 0 && (
           <ul className={styles.list}>
@@ -103,7 +104,7 @@ export function LiveIncidentQueue() {
               return (
                 <li key={p.id}>
                   <button type="button" className={styles.item} aria-current={p.id === selectedId}>
-                    <span className={styles.priority} title={`Priority ${p.priority}`}>
+                    <span className={styles.priority} title={`Приоритет: ${p.priority} из 100`}>
                       <span className={styles.priorityValue}>{p.priority}</span>
                       <SeverityMark severity={p.severity} />
                     </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Activity, Clock3, Flame, Trees, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
@@ -8,6 +8,7 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { SelectField, TextField } from "@/components/ui/Field";
 import { IconButton } from "@/components/ui/IconButton";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { MetricCard } from "@/components/ui/MetricCard";
 import { ErrorMessage, StateMessage } from "@/components/ui/StateMessage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAnalytics, useBurnScar, useOverview } from "@/lib/api/queries";
@@ -52,8 +53,8 @@ export function AnalyticsView() {
     <div className={styles.page}>
       <div className={styles.container}>
         <PageHeader
-          title="Аналитика"
-          description="Динамика пожаров, площади гарей и региональная статистика"
+          title="Пожары в цифрах"
+          description="Как меняется ситуация: события, последствия и время реагирования."
           actions={
             <div className={styles.controls}>
             <SelectField className={styles.regionSelect} value={region ?? ""} onChange={(event) => setParam("region", event.target.value || null)} aria-label="Регион">
@@ -100,29 +101,20 @@ export function AnalyticsView() {
         {analytics.data && (
           <>
             <div className={styles.metrics}>
-              <Card className={styles.metric} padding="md">
-                <div className={styles.metricLabel}>События</div>
-                <span className={styles.metricValue}>{formatInteger(analytics.data.totals.incidents)}</span>
-              </Card>
-              <Card className={styles.metric} padding="md">
-                <div className={styles.metricLabel}>Суммарная площадь гарей</div>
-                <span className={styles.metricValue}>{formatArea(analytics.data.totals.burned_area_ha)}</span>
-              </Card>
-              <Card className={styles.metric} padding="md">
-                <div className={styles.metricLabel}>Высокая severity</div>
-                <span className={styles.metricValue}>{formatArea(analytics.data.totals.high_severity_ha)}</span>
-                <div className={styles.metricSub}>{formatPercent(analytics.data.totals.high_severity_share)} от площади</div>
-              </Card>
-              <Card className={styles.metric} padding="md">
-                <div className={styles.metricLabel}>Среднее время подтверждения</div>
-                <span className={styles.metricValue}>{formatDuration(analytics.data.totals.mean_confirmation_minutes)}</span>
-              </Card>
+              <MetricCard label="Всего событий" value={formatInteger(analytics.data.totals.incidents)} description="За выбранный период" icon={<Activity size={20} />} />
+              <MetricCard label="Площадь гарей" value={formatArea(analytics.data.totals.burned_area_ha)} description="Территория, пройденная огнём" icon={<Trees size={20} />} tone="positive" />
+              <MetricCard label="Сильные повреждения" value={formatArea(analytics.data.totals.high_severity_ha)} description={`${formatPercent(analytics.data.totals.high_severity_share)} от общей площади гарей`} icon={<Flame size={20} />} tone="danger" />
+              <MetricCard label="Время подтверждения" value={formatDuration(analytics.data.totals.mean_confirmation_minutes)} description="В среднем после обнаружения" icon={<Clock3 size={20} />} tone="info" />
             </div>
 
             <div className={styles.grid}>
               <Card className={styles.panel}>
-                <CardHeader title="Площадь гарей и число событий по неделям" />
+                <CardHeader title="Как менялась ситуация" action={<span className={styles.chartHint}>По неделям</span>} />
                 <div className={styles.chartBody}>
+                  <div className={styles.chartLegend}>
+                    <span><i style={{ background: "var(--burn-scar)" }} />Площадь гарей</span>
+                    <span><i style={{ background: "var(--observation)" }} />Число событий</span>
+                  </div>
                   <TrendChart series={analytics.data.series} />
                 </div>
               </Card>

@@ -68,6 +68,10 @@
   padding: 22px 25px 12px;
 }
 
+.chartLegend { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 12px; color: var(--text-secondary); font-size: 12px; }
+.chartLegend span { display: inline-flex; align-items: center; gap: 7px; }
+.chartLegend i { width: 8px; height: 8px; border-radius: 3px; }
+
 .regionList {
   list-style: none;
   margin: 0;
@@ -121,19 +125,19 @@
 .scarTable th {
   text-align: left;
   padding: 12px 25px;
-  font-size: 10.5px;
-  font-weight: 650;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
   border-bottom: 1px solid var(--border);
 }
 
 .scarTable td {
-  padding: 14px 25px;
+  padding: 18px 25px;
   border-bottom: 1px solid var(--border);
   color: var(--text);
 }
+
+.chartHint { color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
 
 .scarTable tbody tr {
   cursor: pointer;

@@ -30,7 +30,7 @@ export function StatusGlyph({ status, size = 8 }: { status: IncidentStatus; size
 
 export function StatusPill({ status }: { status: IncidentStatus }) {
   return (
-    <span className={styles.pill}>
+    <span className={styles.pill} data-status={status}>
       <StatusGlyph status={status} />
       {STATUS_LABEL[status]}
     </span>

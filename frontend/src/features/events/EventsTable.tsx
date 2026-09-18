@@ -6,28 +6,28 @@ import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { TextField } from "@/components/ui/Field";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { MetricCard } from "@/components/ui/MetricCard";
 import { ErrorMessage, StateMessage } from "@/components/ui/StateMessage";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { StatusGlyph } from "@/components/ui/StatusPill";
+import { StatusPill } from "@/components/ui/StatusPill";
 import { useIncidents } from "@/lib/api/queries";
 import type { IncidentSummary } from "@/lib/api/types";
 import { formatArea, formatDistance, formatExact, formatRelative } from "@/lib/format";
-import { STATUS_LABEL } from "@/lib/labels";
 
 import styles from "./events.module.css";
 
 type SortKey = "id" | "status" | "region" | "first_detected_at" | "confidence" | "threat" | "priority" | "area_ha" | "nearest" | "updated_at";
 
 const COLUMNS: { key: SortKey; label: string; numeric?: boolean }[] = [
-  { key: "id", label: "ID" },
+  { key: "id", label: "Событие" },
   { key: "status", label: "Статус" },
   { key: "region", label: "Регион" },
   { key: "first_detected_at", label: "Обнаружен" },
-  { key: "confidence", label: "Confidence", numeric: true },
-  { key: "threat", label: "Threat", numeric: true },
-  { key: "priority", label: "Priority", numeric: true },
+  { key: "confidence", label: "Достоверность", numeric: true },
+  { key: "threat", label: "Угроза", numeric: true },
+  { key: "priority", label: "Приоритет", numeric: true },
   { key: "area_ha", label: "Площадь", numeric: true },
-  { key: "nearest", label: "Ближайший НП" },
+  { key: "nearest", label: "Ближайший посёлок" },
   { key: "updated_at", label: "Обновлён" },
 ];
 
@@ -77,27 +77,20 @@ export function EventsTable({ selectedId, onSelect }: { selectedId: string | nul
     <div className={styles.tableContent}>
       <PageHeader
         className={styles.eventsHeader}
-        title="События"
-        description="Оперативная очередь обнаруженных пожаров"
-        meta={
-          <div className={styles.stats}>
-            <span className={styles.stat}>
-              <span className={styles.statIcon}><Activity size={18} /></span>
-              <span className={styles.statText}><strong>{counts?.active ?? "—"}</strong><small>Активных</small></span>
-            </span>
-            <span className={styles.stat} data-tone="critical">
-              <span className={styles.statIcon}><Flame size={18} /></span>
-              <span className={styles.statText}><strong>{counts?.critical ?? "—"}</strong><small>Критических</small></span>
-            </span>
-            <span className={styles.stat} data-tone="new">
-              <span className={styles.statIcon}><Sparkles size={18} /></span>
-              <span className={styles.statText}><strong>{counts?.new_24h ?? "—"}</strong><small>Новых за 24 ч</small></span>
-            </span>
-          </div>
-        }
+        title="События под наблюдением"
+        description="Все события в одном месте. Выберите пожар, чтобы увидеть подробности."
       />
+      <div className={styles.stats}>
+        <MetricCard label="Активные события" value={counts?.active ?? "—"} description="Сейчас под наблюдением" icon={<Activity size={20} />} />
+        <MetricCard label="Критические" value={counts?.critical ?? "—"} description="Требуют внимания в первую очередь" icon={<Flame size={20} />} tone="danger" />
+        <MetricCard label="Новые за сутки" value={counts?.new_24h ?? "—"} description="Обнаружены за последние 24 часа" icon={<Sparkles size={20} />} tone="positive" />
+      </div>
       <Card className={styles.tableCard}>
         <div className={styles.toolbar}>
+          <div className={styles.tableHeading}>
+            <h2>Все события <span>{query.data ? rows.length : "—"}</span></h2>
+            <p>Оценки достоверности, угрозы и приоритета — от 0 до 100</p>
+          </div>
           <TextField
             className={styles.search}
             icon={<Search size={17} strokeWidth={1.8} />}
@@ -126,16 +119,18 @@ export function EventsTable({ selectedId, onSelect }: { selectedId: string | nul
                     <th
                       key={column.key}
                       data-sortable="true"
-                      onClick={() => toggleSort(column.key)}
+                      aria-sort={sort.key === column.key ? (sort.desc ? "descending" : "ascending") : "none"}
                       style={column.numeric ? { textAlign: "right" } : undefined}
                     >
-                      {column.label}
-                      {sort.key === column.key &&
-                        (sort.desc ? (
-                          <ArrowDown size={11} className={styles.sortIcon} />
-                        ) : (
-                          <ArrowUp size={11} className={styles.sortIcon} />
-                        ))}
+                      <button type="button" className={styles.sortButton} onClick={() => toggleSort(column.key)}>
+                        {column.label}
+                        {sort.key === column.key &&
+                          (sort.desc ? (
+                            <ArrowDown size={11} className={styles.sortIcon} />
+                          ) : (
+                            <ArrowUp size={11} className={styles.sortIcon} />
+                          ))}
+                      </button>
                     </th>
                   ))}
                 </tr>
@@ -143,12 +138,9 @@ export function EventsTable({ selectedId, onSelect }: { selectedId: string | nul
               <tbody>
                 {rows.map((item) => (
                   <tr key={item.id} aria-selected={item.id === selectedId} onClick={() => onSelect(item.id)}>
-                    <td className="mono">{item.id}</td>
+                    <td><button type="button" className={styles.eventLink} aria-label={`Открыть событие ${item.id}`} onClick={(event) => { event.stopPropagation(); onSelect(item.id); }}>{item.id}</button></td>
                     <td>
-                      <span className={styles.statusCell}>
-                        <StatusGlyph status={item.status} />
-                        {STATUS_LABEL[item.status]}
-                      </span>
+                      <StatusPill status={item.status} />
                     </td>
                     <td>
                       {item.region}
@@ -158,7 +150,7 @@ export function EventsTable({ selectedId, onSelect }: { selectedId: string | nul
                     <td className={styles.numeric}>{item.confidence}</td>
                     <td className={styles.numeric}>{item.threat}</td>
                     <td className={styles.numeric}>
-                      <span className={styles.priorityCell}>{item.priority}</span>
+                      <span className={styles.priorityCell} data-level={item.priority >= 85 ? "high" : item.priority >= 65 ? "medium" : "low"}>{item.priority}</span>
                     </td>
                     <td className={styles.numeric}>{formatArea(item.area_ha)}</td>
                     <td>
