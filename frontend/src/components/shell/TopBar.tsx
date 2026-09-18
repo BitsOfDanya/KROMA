@@ -1,29 +1,25 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { GlobalSearch } from "./GlobalSearch";
 import { ModeSwitch } from "./ModeSwitch";
+import { Navigation } from "./Navigation";
 import { RegionSelect } from "./RegionSelect";
 import styles from "./shell.module.css";
 import { StatusIndicator } from "./StatusIndicator";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
-const PAGE_TITLE: Record<string, string> = {
-  "/": "Обзор",
-  "/events": "События",
-  "/analytics": "Аналитика",
-};
+import { Wordmark } from "./Wordmark";
 
 export function TopBar() {
-  const pathname = usePathname();
   return (
     <header className={styles.topBar}>
-      <div className={styles.pageIdentity}>
-        <span className={styles.pageEyebrow}>Мониторинг пожаров</span>
-        <div className={styles.pageTitle}>{PAGE_TITLE[pathname] ?? "KROMA"}</div>
-      </div>
+      <Link href="/" aria-label="KROMA — обзор" className={styles.brandLink}>
+        <Wordmark />
+      </Link>
+      <Navigation />
       <div className={styles.tools}>
         <Suspense>
           <GlobalSearch />

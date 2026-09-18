@@ -147,10 +147,9 @@
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 25px;
-  --header-height: 100px;
-  --sidebar-width: 250px;
-  --mobile-header-height: 76px;
-  --mobile-nav-height: 70px;
+  --header-height: 80px;
+  --mobile-header-height: 120px;
+  --mobile-nav-height: 0px;
   --map-inset-top: 20px;
   --rail-width: 52px;
   --panel-width: 380px;
