@@ -1,0 +1,58 @@
+{
+  "parent": "submission_v005.csv (public 0.81)",
+  "version_candidate": "v006_rededge (conservative)",
+  "bs_change": "component classifier and pixel refiner v2 retrained on all 224 train chips with red-edge features (B5/B6/B7 deltas, NDRE5/6/7 deltas, NDRE7 post, local means, component ring contrast); same decision rule 0.3/0.8/0.2",
+  "oof_all_valid": {
+    "v005": 0.42983,
+    "v006": 0.43552
+  },
+  "oof_strict": {
+    "v005": 0.44009,
+    "v006": 0.44677
+  },
+  "oof_per_fold_all_valid": {
+    "v005": [
+      0.4267,
+      0.4325,
+      0.4303
+    ],
+    "v006": [
+      0.4332,
+      0.4349,
+      0.4383
+    ]
+  },
+  "oof_shift_vs_v005": {
+    "burn_removed_share": 0.0452,
+    "burn_added_share": 0.0413
+  },
+  "expected_public": "small gain; OOF +0.0057 is below the +0.01 gate, submitted only as a conservative candidate",
+  "determinism": "two full runs, identical sha 4108db72...",
+  "test_inference": {
+    "base": "v005 BS (reproduced byte-exactly on all 89 test chips in the same run)",
+    "change": "component classifier and pixel refiner v2 retrained on all 224 train chips with red-edge features (B5/B6/B7 deltas, NDRE5/6/7 deltas, NDRE7 post, local means, component ring contrast); same decision rule 0.3/0.8/0.2",
+    "models": [
+      "data/processed/bs_v006/component_full_v006_rededge.txt",
+      "data/processed/bs_v006/refiner2_full_v006_rededge.txt"
+    ],
+    "test_shift_vs_v005": {
+      "burn_removed_share": 0.029821909189189748,
+      "burn_added_share": 0.03930995731297152,
+      "severity_px": {
+        "1": 1931651,
+        "2": 1306652,
+        "3": 662059
+      },
+      "v005_severity_px": {
+        "1": 1904548,
+        "2": 1306646,
+        "3": 652509
+      },
+      "components_total": 10537
+    },
+    "extra_ms_per_chip_rededge_stage": 575.2,
+    "total_seconds": 322.3,
+    "deterministic_sha256": "4108db720907f64c709cfff0e232cadd1908c232a9055a6159a2b4ed7c3552b9",
+    "submission": "artifacts/bs_submission_v006_rededge.csv"
+  }
+}
