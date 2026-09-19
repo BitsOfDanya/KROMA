@@ -310,3 +310,20 @@
     grid-template-columns: 1fr;
   }
 }
+
+.sceneSelect {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.dropzone input {
+  width: 100%;
+  max-width: 260px;
+  font-size: 12px;
+}

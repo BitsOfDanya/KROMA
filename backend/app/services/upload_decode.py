@@ -79,7 +79,7 @@ def mask_to_png_b64(mask: np.ndarray, *, binary: bool = False) -> str:
     else:
         arr = arr.astype(np.uint8)
     png = io.BytesIO()
-    _colorize_mask(arr).save(png, format="PNG")
+    _colorize_mask(arr, active_fire=binary).save(png, format="PNG")
     return base64.b64encode(png.getvalue()).decode("ascii")
 
 

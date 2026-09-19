@@ -5,6 +5,7 @@ from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile
 from pydantic import BaseModel, Field
+from starlette.concurrency import run_in_threadpool
 
 from app.repositories.prepared import PreparedDatasetRepository, get_prepared_repository
 from app.services.exports import shapefile_zip
@@ -17,15 +18,10 @@ from app.services.prediction import (
     validation_geometry,
 )
 from app.services.train_dataset import Asset, get_train_dataset_service
-from app.services.upload_decode import MAX_UPLOAD_BYTES, decode_upload
+from app.services.upload_decode import MAX_UPLOAD_BYTES
+from app.services.upload_inference import predict_upload
 
 router = APIRouter(tags=["datasets"])
-
-UPLOAD_LIMITATION = (
-    "Финальная модель принимает пакет официального чипа (AF: VIIRS + AUX; BS: Sentinel-2 до/после, "
-    "Sentinel-1, AUX), а не одиночный снимок. Выберите train-чип по ID или загрузите пакет через "
-    "подготовленный набор."
-)
 
 
 class MlPredictBody(BaseModel):
@@ -193,19 +189,9 @@ async def inference_upload(
     file: UploadFile = File(...),
 ) -> dict:
     data = await file.read(MAX_UPLOAD_BYTES + 1)
-    decoded = decode_upload(file.filename or "upload.bin", data)
-    decoded.pop("array", None)
-    status = get_ml_service().status()
-    return {
-        "task": task,
-        "input": decoded,
-        "status": "unavailable",
-        "detail": UPLOAD_LIMITATION,
-        "model_version": status[task]["model_version"] or "unavailable",
-        "runtime_ms": 0.0,
-        "mask_png_b64": None,
-        "metrics": {},
-    }
+    if not get_ml_service().ready(task):
+        raise HTTPException(status_code=503, detail=f"{task.upper()} model artifacts are missing")
+    return await run_in_threadpool(predict_upload, task, file.filename or "upload.zip", data)
 
 
 @router.get("/datasets/train/{chip_id}/rasters")

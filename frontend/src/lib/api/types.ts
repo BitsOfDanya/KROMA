@@ -402,10 +402,8 @@ export interface MlStatus {
 export interface UploadPredictInput {
   filename: string;
   kind: string;
+  chip_id: string;
   shape: number[];
-  dtype: string;
-  bands: number;
-  nbytes: number;
   preview_png_b64: string;
 }
 

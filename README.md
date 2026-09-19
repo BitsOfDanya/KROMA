@@ -34,10 +34,10 @@ python scripts/build_train_index.py --train-root "$KROMA_TRAIN_ROOT"
 - **Аналитика**: SCENARIO для демонстрационной динамики; реальные динамические итоги в «Анализе территории».
 - **Анализ**: bbox + включительный период UTC → пересекающиеся prepared scenes → термоточки, контуры, severity и справка. Рабочие примеры берутся из каталога наборов.
 - **Данные**: 420 AF + 224 BS official TRAIN, поиск/фильтры, метаданные, I4/I5/difference, PRE/POST slider, dNBR, landcover, GT и model output.
-- **Предикт**: выбор полного TRAIN-пакета, AF/BS inference, probability, GT, errors, локальные метрики, площади, GeoJSON, Shapefile и NPZ.
+- **Предикт**: загрузка своего ZIP с полным чипом для AF/BS inference (маска и площадь/число термоточек) или выбор TRAIN-сцены для GT, errors, локальных метрик, GeoJSON, Shapefile и NPZ.
 - **О проекте / Research / О команде**: реальные сведения проекта, pipeline, leaderboard и ограничения.
 
-Обычный JPEG не является входом AF/BS. Старый `/inference/upload` оставлен как диагностика изображения и честно возвращает `unavailable`; основной demo использует полный пакет TRAIN.
+Обычный JPEG не является входом AF/BS. `/api/v1/inference/upload` принимает один ZIP до 64 МБ с TIFF одного чипа: каждый TIFF имеет размер 256×256, имена имеют общий `ID`. Для AF нужны `ID_VIIRS_I1-I5.tif` (8 каналов) и `ID_AUX.tif` (5 каналов). Для BS нужны `ID_Sentinel-2_pre.tif`, `ID_Sentinel-2_post.tif` (по 10 каналов), `ID_Sentinel-1_pre.tif`, `ID_Sentinel-1_post.tif` (по 2 канала) и `ID_AUX.tif` (3 канала). Папки внутри ZIP допустимы. Разметка и координаты не требуются; метрики качества и векторный экспорт для своего ZIP не доступны. TRAIN-предикт требует подключённых исходных растров на сервере.
 
 ## Архитектура
 
