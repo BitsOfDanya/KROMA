@@ -1,12 +1,12 @@
 "use client";
 
-import { Activity, Clock3, Flame, Trees, X } from "lucide-react";
+import { Activity, Clock3, Flame, MapPin, Trees, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
 import { Card, CardHeader } from "@/components/ui/Card";
-import { SelectField, TextField } from "@/components/ui/Field";
+import { TextField } from "@/components/ui/Field";
 import { IconButton } from "@/components/ui/IconButton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { MetricCard } from "@/components/ui/MetricCard";
@@ -16,6 +16,7 @@ import { useAnalytics, useBurnScar, useOverview } from "@/lib/api/queries";
 import { formatArea, formatDateLong, formatDuration, formatInteger, formatPercent } from "@/lib/format";
 
 import styles from "./analytics.module.css";
+import { AnalyticsRegionPicker } from "./AnalyticsRegionPicker";
 import { BurnScarCompare } from "./BurnScarCompare";
 import { TrendChart } from "./TrendChart";
 
@@ -42,6 +43,7 @@ export function AnalyticsView() {
   const analytics = useAnalytics({ from, to, region });
   const scarId = searchParams.get("scar");
   const scar = useBurnScar(scarId);
+  const selectedRegion = overview.data?.regions.find((item) => item.id === region);
 
   const setParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams);
@@ -54,19 +56,17 @@ export function AnalyticsView() {
     <div className={styles.page}>
       <div className={styles.container}>
         <PageHeader
+          className={styles.analyticsHeader}
           title="Пожары в цифрах"
           description="Как меняется ситуация: события, последствия и время реагирования."
           actions={
             <div className={styles.controls}>
             <Link className={styles.analysisLink} href="/analytics?tab=area">Анализ территории</Link>
-            <SelectField className={styles.regionSelect} value={region ?? ""} onChange={(event) => setParam("region", event.target.value || null)} aria-label="Регион">
-              <option value="">Все регионы</option>
-              {overview.data?.regions.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </SelectField>
+            <AnalyticsRegionPicker
+              regions={overview.data?.regions ?? []}
+              value={region}
+              onChange={(value) => setParam("region", value)}
+            />
             <TextField
               className={styles.dateField}
               type="date"
@@ -86,6 +86,15 @@ export function AnalyticsView() {
             </div>
           }
         />
+
+        <div className={styles.regionContext} role="status">
+          <span className={styles.regionContextIcon}><MapPin size={18} aria-hidden="true" /></span>
+          <span className={styles.regionContextText}>
+            <strong>{selectedRegion?.name ?? "Все регионы"}</strong>
+            <small>{selectedRegion ? "Показатели и динамика для выбранной территории" : "Сводка по всем доступным территориям"}</small>
+          </span>
+          {selectedRegion?.name.includes("(сценарий)") && <span className={styles.regionContextBadge}>Сценарий</span>}
+        </div>
 
         {analytics.isError && <ErrorMessage error={analytics.error} onRetry={() => analytics.refetch()} retrying={analytics.isFetching} />}
 
