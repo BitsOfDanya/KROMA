@@ -44,5 +44,10 @@ data/*
 !data/README.md
 !data/fire-aoi/
 !data/fire-aoi/**
+data/fire-aoi/*.gpkg
+data/fire-aoi/*.zip
+data/yandex/
+!data/yandex/.gitkeep
+
 ml/models/
 frontend/public/maplibre/

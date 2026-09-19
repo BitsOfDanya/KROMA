@@ -138,17 +138,33 @@ export function MapLegend() {
           </div>
         </>
       )}
-      {isReplay && (layers.burnScars || layers.thermalMemory || layers.infrastructure || layers.wind || layers.clouds || layers.monitoringAoi) && (
+      {layers.monitoringAoi && (
+        <>
+          <h3 className={styles.legendTitle}>Территория</h3>
+          <div className={styles.legendRows}>
+            <div className={styles.legendRow}>
+              <Swatch color="var(--protected-area)" opacity={0.2} />
+              АОИ · Нижнее Поволжье и Подонье
+            </div>
+          </div>
+        </>
+      )}
+      {layers.monitoringChips && (
+        <>
+          <h3 className={styles.legendTitle}>Датасет</h3>
+          <div className={styles.legendRows}>
+            <div className={styles.legendRow}>
+              <Swatch color="var(--burn-scar)" opacity={0.35} />
+              Чипы train · BS / AF
+            </div>
+          </div>
+        </>
+      )}
+      {isReplay && (layers.burnScars || layers.thermalMemory || layers.infrastructure || layers.wind || layers.clouds) && (
         <h3 className={styles.legendTitle}>Контекст</h3>
       )}
       {isReplay && (
         <div className={styles.legendRows}>
-          {layers.monitoringAoi && (
-            <div className={styles.legendRow}>
-              <Swatch color="var(--protected-area)" opacity={0.2} />
-              АОИ мониторинга
-            </div>
-          )}
           {layers.burnScars && (
             <div className={styles.legendRow}>
               <Swatch color="var(--burn-scar)" opacity={0.35} />

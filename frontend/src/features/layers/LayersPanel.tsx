@@ -79,6 +79,12 @@ const GROUPS: { title: string; rows: LayerRow[]; replayOnly?: boolean }[] = [
         hint: "АОИ из датасета · Нижнее Поволжье и Подонье",
         glyph: fill("var(--protected-area)", 0.18),
       },
+      {
+        id: "monitoringChips",
+        label: "Чипы датасета (train)",
+        hint: "Геопривязанные footprints AF/BS",
+        glyph: fill("var(--burn-scar)", 0.28),
+      },
     ],
   },
   {

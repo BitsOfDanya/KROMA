@@ -4,6 +4,7 @@ import { LABEL_LAYER_PREFIX } from "../basemap";
 import type { Palette } from "../palette";
 import { aoiModule } from "./aoi";
 import { burnScarsModule } from "./burnScars";
+import { chipsModule } from "./chips";
 import { environmentModule } from "./environment";
 import { forecastModule } from "./forecast";
 import { hotspotsModule } from "./hotspots";
@@ -16,6 +17,7 @@ import type { OperationalLayer, VisibilityContext } from "./types";
 
 const MODULES = [
   aoiModule,
+  chipsModule,
   environmentModule,
   riskObjectsModule,
   burnScarsModule,

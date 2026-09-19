@@ -13,7 +13,14 @@ import { useWorkspace, type LayerId } from "@/state/workspace";
 
 import styles from "./explorer.module.css";
 
-const LAYER_PRESETS: { id: string; label: string; hint: string; layers: Partial<Record<LayerId, boolean>>; basemap?: "map" | "satellite" | "terrain"; profile?: "ops" | "fireWeather" }[] = [
+const LAYER_PRESETS: { id: string; label: string; hint: string; layers: Partial<Record<LayerId, boolean>>; basemap?: "map" | "satellite" | "terrain"; profile?: "ops" | "fireWeather"; region?: string }[] = [
+  {
+    id: "aoi",
+    label: "Территория мониторинга",
+    hint: "АОИ Нижнее Поволжье и Подонье · зоны UTM",
+    layers: { monitoringAoi: true, incidents: true, rawDetections: false },
+    region: "aoi",
+  },
   {
     id: "raw",
     label: "Сырые термоточки",
@@ -80,7 +87,11 @@ export function ExplorerView() {
       if (preset.layers.rawDetections) setEvidenceMode("data");
       else setEvidenceMode("events");
     }
-    if (regionId) setRegion(regionId);
+    const nextRegion = preset.region || regionId;
+    if (nextRegion) {
+      setRegionId(nextRegion);
+      setRegion(nextRegion);
+    }
   };
 
   const analysisHref = useMemo(() => {
@@ -116,6 +127,51 @@ export function ExplorerView() {
         />
 
         <div className={styles.grid}>
+          <Card className={styles.panel}>
+            <div className={styles.panelHead}>
+              <MapPinned size={16} />
+              <div>
+                <h2>Территория мониторинга</h2>
+                <p>Из датасета Мониторинг DATA · не ML-чипы</p>
+              </div>
+            </div>
+            <ul className={styles.list}>
+              <li>
+                <div>
+                  <strong>Нижнее Поволжье и Подонье</strong>
+                  <span className={styles.meta}>~435 тыс. км² · EPSG:4326 · сезоны 2019–2025 · месяцы 04–10</span>
+                  <p>
+                    Ростовская, Волгоградская, Астраханская обл., запад и центр Саратовской обл., Республика Калмыкия.
+                    На карте — граница АОИ, полосы UTM и footprints train-чипов (слой «Чипы датасета»).
+                  </p>
+                </div>
+                <div className={styles.stackActions}>
+                  <button
+                    type="button"
+                    className={styles.ghostLink}
+                    onClick={() => {
+                      setRegionId("aoi");
+                      setRegion("aoi");
+                      setLayer("monitoringAoi", true);
+                      setLayer("monitoringChips", true);
+                    }}
+                  >
+                    Показать на карте
+                  </button>
+                  <a
+                    className={styles.ghostLink}
+                    href="https://disk.yandex.ru/d/-rpmevTflbXZQg"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink size={14} />
+                    Источник
+                  </a>
+                </div>
+              </li>
+            </ul>
+          </Card>
+
           <Card className={styles.panel}>
             <div className={styles.panelHead}>
               <Database size={16} />
@@ -158,7 +214,9 @@ export function ExplorerView() {
               ))}
             </ul>
           </Card>
+        </div>
 
+        <div className={styles.grid}>
           <Card className={styles.panel}>
             <div className={styles.panelHead}>
               <Layers size={16} />
@@ -182,7 +240,15 @@ export function ExplorerView() {
               {LAYER_PRESETS.map((preset) => (
                 <button key={preset.id} type="button" className={styles.preset} onClick={() => applyPreset(preset.id)}>
                   <span className={styles.presetIcon}>
-                    {preset.id === "weather" ? <Wind size={16} /> : preset.id === "burn" ? <Satellite size={16} /> : <Flame size={16} />}
+                    {preset.id === "aoi" ? (
+                      <MapPinned size={16} />
+                    ) : preset.id === "weather" ? (
+                      <Wind size={16} />
+                    ) : preset.id === "burn" ? (
+                      <Satellite size={16} />
+                    ) : (
+                      <Flame size={16} />
+                    )}
                   </span>
                   <span>
                     <strong>{preset.label}</strong>
@@ -194,6 +260,28 @@ export function ExplorerView() {
             <Link className={styles.ghostLink} href="/">
               Открыть карту с пресетом
             </Link>
+          </Card>
+
+          <Card className={styles.panel}>
+            <div className={styles.panelHead}>
+              <Satellite size={16} />
+              <div>
+                <h2>Что не подключено</h2>
+                <p>Честная граница сервиса</p>
+              </div>
+            </div>
+            <ul className={styles.list}>
+              <li>
+                <div>
+                  <strong>fire-train / fire-test tar</strong>
+                  <span className={styles.meta}>ML-чипы AF/BS · Sentinel-1/2 · без live NRT</span>
+                  <p>
+                    Архивы с Яндекс.Диска — для обучения и инференса. На оперативную карту не выкладываются, пока нет
+                    геопривязанного prepared-набора.
+                  </p>
+                </div>
+              </li>
+            </ul>
           </Card>
         </div>
 

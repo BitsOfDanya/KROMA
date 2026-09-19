@@ -28,7 +28,8 @@ export type LayerId =
   | "protectedAreas"
   | "wind"
   | "clouds"
-  | "monitoringAoi";
+  | "monitoringAoi"
+  | "monitoringChips";
 
 export type CameraRequest =
   | { kind: "bounds"; bbox: BBox; maxZoom?: number; nonce: number }
@@ -55,6 +56,7 @@ export const DEFAULT_LAYERS: Record<LayerId, boolean> = {
   wind: false,
   clouds: false,
   monitoringAoi: true,
+  monitoringChips: true,
 };
 
 const FIRE_WEATHER_LAYERS: Record<LayerId, boolean> = {
@@ -75,6 +77,7 @@ const FIRE_WEATHER_LAYERS: Record<LayerId, boolean> = {
   wind: true,
   clouds: true,
   monitoringAoi: true,
+  monitoringChips: true,
 };
 
 interface WorkspaceState {

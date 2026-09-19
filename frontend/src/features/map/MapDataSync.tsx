@@ -18,6 +18,7 @@ import { incidentStateAtIndex, parseStateKey, stateKey } from "@/lib/replay";
 import { useWorkspace } from "@/state/workspace";
 
 import { AOI_SOURCE } from "./layers/aoi";
+import { CHIPS_SOURCE } from "./layers/chips";
 import { BURN_SCARS_SOURCE } from "./layers/burnScars";
 import { CLOUDS_SOURCE, WIND_SOURCE } from "./layers/environment";
 import { FORECAST_SOURCE } from "./layers/forecast";
@@ -260,6 +261,29 @@ function AoiSource() {
   return null;
 }
 
+function ChipsSource() {
+  const [data, setData] = useState<GeoJSON.GeoJSON>(emptyCollection());
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/data/monitoring_chips.geojson")
+      .then((response) => {
+        if (!response.ok) throw new Error(`chips HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((collection: GeoJSON.FeatureCollection) => {
+        if (!cancelled) setData(collection);
+      })
+      .catch(() => {
+        if (!cancelled) setData(emptyCollection());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  useSource(CHIPS_SOURCE, data);
+  return null;
+}
+
 export function MapDataSync() {
   const viewport = useViewport();
   const bbox = viewport?.bbox ?? null;
@@ -270,6 +294,7 @@ export function MapDataSync() {
   return (
     <>
       <AoiSource />
+      <ChipsSource />
       <IncidentSources appMode={appMode} bbox={bbox} />
       <ForecastSource />
       {appMode === "live" ? (
