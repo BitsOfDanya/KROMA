@@ -113,7 +113,11 @@ class TrainDatasetService:
             **chip,
             "assets": assets,
             "inspector": {
-                "modes": ["ground_truth", "layers"] if kind == "af" else ["before_after", "ground_truth", "layers"],
+                "modes": (
+                    ["ground_truth", "layers"]
+                    if kind == "af"
+                    else ["before_after", "ground_truth", "layers"]
+                ),
                 "prediction_available": False,
                 "prediction_note": (
                     "Model weights not mounted — showing official TRAIN ground truth only. "
@@ -149,7 +153,10 @@ class TrainDatasetService:
         blob = self.read_bytes(chip_id, asset)
         arr = tifffile.imread(io.BytesIO(blob))
         img = _array_to_preview(arr, asset)
-        img = img.resize((size, size), Image.Resampling.NEAREST if asset == "mask" else Image.Resampling.BILINEAR)
+        resampling = (
+            Image.Resampling.NEAREST if asset == "mask" else Image.Resampling.BILINEAR
+        )
+        img = img.resize((size, size), resampling)
         out = io.BytesIO()
         img.save(out, format="PNG")
         return out.getvalue()

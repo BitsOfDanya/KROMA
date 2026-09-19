@@ -35,9 +35,17 @@ def get_train_chip(chip_id: str) -> dict:
 
 
 @router.get("/datasets/train/{chip_id}/preview/{asset}")
-def preview_train_asset(chip_id: str, asset: Asset, size: int = Query(512, ge=64, le=1024)) -> Response:
+def preview_train_asset(
+    chip_id: str,
+    asset: Asset,
+    size: int = Query(512, ge=64, le=1024),
+) -> Response:
     png = get_train_dataset_service().preview_png(chip_id, asset, size=size)
-    return Response(content=png, media_type="image/png", headers={"Cache-Control": "public, max-age=3600"})
+    return Response(
+        content=png,
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
 
 
 @router.get("/ml/status")

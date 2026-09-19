@@ -10,7 +10,6 @@ import numpy as np
 from fastapi import HTTPException
 from PIL import Image
 
-
 MAX_UPLOAD_BYTES = 64 * 1024 * 1024
 
 
@@ -31,7 +30,10 @@ def decode_upload(filename: str, data: bytes) -> dict[str, Any]:
             array = np.asarray(tifffile.imread(io.BytesIO(data)))
             kind = "geotiff"
         except Exception as exc:  # noqa: BLE001
-            raise HTTPException(status_code=400, detail=f"Не удалось прочитать GeoTIFF: {exc}") from exc
+            raise HTTPException(
+                status_code=400,
+                detail=f"Не удалось прочитать GeoTIFF: {exc}",
+            ) from exc
     else:
         try:
             img = Image.open(io.BytesIO(data))
@@ -39,11 +41,19 @@ def decode_upload(filename: str, data: bytes) -> dict[str, Any]:
             array = np.asarray(img)
             kind = "image"
         except Exception as exc:  # noqa: BLE001
-            raise HTTPException(status_code=400, detail=f"Не удалось прочитать изображение: {exc}") from exc
+            raise HTTPException(
+                status_code=400,
+                detail=f"Не удалось прочитать изображение: {exc}",
+            ) from exc
 
     preview = _preview_png(array)
     shape = list(array.shape)
-    bands = 1 if array.ndim == 2 else (array.shape[0] if array.shape[0] <= 12 and array.ndim == 3 else array.shape[-1])
+    if array.ndim == 2:
+        bands = 1
+    elif array.ndim == 3 and array.shape[0] <= 12:
+        bands = array.shape[0]
+    else:
+        bands = array.shape[-1]
     return {
         "filename": filename,
         "kind": kind,
@@ -78,9 +88,13 @@ def _preview_png(arr: np.ndarray, size: int = 512) -> bytes:
         plane = arr.astype(np.float32)
         rgb = np.stack([_stretch(plane)] * 3, axis=-1)
     else:
-        data = np.moveaxis(arr, 0, -1) if arr.shape[0] < arr.shape[-1] and arr.shape[0] <= 16 else arr
+        channel_first = arr.shape[0] < arr.shape[-1] and arr.shape[0] <= 16
+        data = np.moveaxis(arr, 0, -1) if channel_first else arr
         if data.ndim == 3 and data.shape[-1] >= 3:
-            rgb = np.stack([_stretch(data[..., i].astype(np.float32)) for i in (0, 1, 2)], axis=-1)
+            rgb = np.stack(
+                [_stretch(data[..., i].astype(np.float32)) for i in (0, 1, 2)],
+                axis=-1,
+            )
         elif data.ndim == 3:
             plane = data[..., 0].astype(np.float32)
             rgb = np.stack([_stretch(plane)] * 3, axis=-1)

@@ -29,7 +29,13 @@ def transformer(epsg: int) -> Transformer:
     return _transformers[epsg]
 
 
-def footprint(epsg: int, x_min: float, y_min: float, x_max: float, y_max: float) -> list[list[float]]:
+def footprint(
+    epsg: int,
+    x_min: float,
+    y_min: float,
+    x_max: float,
+    y_max: float,
+) -> list[list[float]]:
     t = transformer(epsg)
     corners = [
         (x_min, y_max),
@@ -79,7 +85,9 @@ def row_to_feature(row: dict) -> dict | None:
     ring = footprint(epsg, x_min, y_min, x_max, y_max)  # type: ignore[arg-type]
     n_fire = _num(row.get("n_fire_px", ""))
     burn_ha = _num(row.get("burn_area_ha", ""))
-    sev1, sev2, sev3 = _num(row.get("sev1_px", "")), _num(row.get("sev2_px", "")), _num(row.get("sev3_px", ""))
+    sev1 = _num(row.get("sev1_px", ""))
+    sev2 = _num(row.get("sev2_px", ""))
+    sev3 = _num(row.get("sev3_px", ""))
     props = {
         "id": chip_id,
         "chip_id": chip_id,

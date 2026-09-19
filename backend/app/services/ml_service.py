@@ -88,8 +88,12 @@ class MlService:
                 "ready": all(p.is_file() for p in bs_paths.values()),
                 "paths": {k: str(v) for k, v in bs_paths.items()},
                 "present": {k: v.is_file() for k, v in bs_paths.items()},
-                "model_version": self._bs_version if all(p.is_file() for p in bs_paths.values()) else None,
-                "expected": "Attention U-Net ensemble → physics/dNBR → LightGBM refiner (GOLD/v004)",
+                "model_version": (
+                    self._bs_version if all(p.is_file() for p in bs_paths.values()) else None
+                ),
+                "expected": (
+                    "Attention U-Net ensemble → physics/dNBR → LightGBM refiner (GOLD/v004)"
+                ),
             },
             "note": (
                 "Weights are not shipped in this checkout. Mount ml/artifacts or set "

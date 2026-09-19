@@ -22,7 +22,12 @@ OUT_DATA = ROOT / "data/fire-aoi/monitoring_chips.geojson"
 TMP = ROOT / "data/yandex/chips_aux"
 
 
-def utm_to_lonlat(easting: float, northing: float, zone: int, northern: bool = True) -> tuple[float, float]:
+def utm_to_lonlat(
+    easting: float,
+    northing: float,
+    zone: int,
+    northern: bool = True,
+) -> tuple[float, float]:
     a = 6378137.0
     e = 0.081819190842622
     e1sq = 0.006739496742333
@@ -36,7 +41,13 @@ def utm_to_lonlat(easting: float, northing: float, zone: int, northern: bool = T
     j2 = 21 * e1**2 / 16 - 55 * e1**4 / 32
     j3 = 151 * e1**3 / 96
     j4 = 1097 * e1**4 / 512
-    fp = mu + j1 * math.sin(2 * mu) + j2 * math.sin(4 * mu) + j3 * math.sin(6 * mu) + j4 * math.sin(8 * mu)
+    fp = (
+        mu
+        + j1 * math.sin(2 * mu)
+        + j2 * math.sin(4 * mu)
+        + j3 * math.sin(6 * mu)
+        + j4 * math.sin(8 * mu)
+    )
     sinfp = math.sin(fp)
     cosfp = math.cos(fp)
     tanfp = math.tan(fp)
@@ -128,7 +139,12 @@ def extract_aux(tar_path: pathlib.Path, dest_dir: pathlib.Path) -> list[pathlib.
             if data_end > size:
                 print(f"truncated at {name}", file=sys.stderr)
                 break
-            if typ in (b"0", b"\0") and name.startswith("train/") and "/aux/" in name and name.endswith("_AUX.tif"):
+            if (
+                typ in (b"0", b"\0")
+                and name.startswith("train/")
+                and "/aux/" in name
+                and name.endswith("_AUX.tif")
+            ):
                 dest = dest_dir / pathlib.Path(name).name
                 if not dest.exists() or dest.stat().st_size != fsize:
                     f.seek(data_start)
@@ -150,7 +166,12 @@ def main() -> int:
         if not geo:
             continue
         chip_id = path.name.replace("_AUX.tif", "")
-        kind = "af" if chip_id.startswith("AF_") else "bs" if chip_id.startswith("BS_") else "unknown"
+        if chip_id.startswith("AF_"):
+            kind = "af"
+        elif chip_id.startswith("BS_"):
+            kind = "bs"
+        else:
+            kind = "unknown"
         features.append(
             {
                 "type": "Feature",
