@@ -159,7 +159,8 @@ def test_checksum_mismatch_is_detected(tmp_path: Path) -> None:
     target = tmp_path / "dataset"
     target.mkdir()
     for path in source.iterdir():
-        (target / path.name).write_bytes(path.read_bytes())
+        if path.is_file():
+            (target / path.name).write_bytes(path.read_bytes())
     (target / "hotspots.geojson").write_text("{}", encoding="utf-8")
 
     repository = PreparedDatasetRepository(target)

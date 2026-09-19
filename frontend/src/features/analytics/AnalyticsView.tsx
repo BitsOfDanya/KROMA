@@ -93,7 +93,7 @@ export function AnalyticsView() {
             <strong>{selectedRegion?.name ?? "Все регионы"}</strong>
             <small>{selectedRegion ? "Показатели и динамика для выбранной территории" : "Сводка по всем доступным территориям"}</small>
           </span>
-          {selectedRegion?.name.includes("(сценарий)") && <span className={styles.regionContextBadge}>Сценарий</span>}
+          <span className={styles.regionContextBadge}>SCENARIO</span>
         </div>
 
         {analytics.isError && <ErrorMessage error={analytics.error} onRetry={() => analytics.refetch()} retrying={analytics.isFetching} />}

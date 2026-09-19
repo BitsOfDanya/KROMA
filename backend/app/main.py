@@ -1,4 +1,5 @@
 import asyncio
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -41,8 +42,16 @@ app.add_middleware(
     allow_origins=settings.cors_origins,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
-    expose_headers=["Content-Disposition"],
+    expose_headers=["Content-Disposition", "X-Runtime-Ms"],
 )
+
+
+@app.middleware("http")
+async def runtime_header(request: Request, call_next):
+    started = time.perf_counter()
+    response = await call_next(request)
+    response.headers["X-Runtime-Ms"] = f"{(time.perf_counter() - started) * 1000:.1f}"
+    return response
 
 
 @app.exception_handler(NotFoundError)

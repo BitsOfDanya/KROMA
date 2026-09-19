@@ -346,6 +346,9 @@ class AnalysisService:
                 {
                     "id": identifier,
                     "source_zone_id": source_id,
+                    "contour_id": identifier,
+                    "model_version": dataset.manifest.processing_version,
+                    "source": props.get("source", dataset.manifest.origin),
                     "area_ha": area,
                     "dataset_id": request.dataset_id,
                     "dataset_version": request.dataset_version,

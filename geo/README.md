@@ -1,3 +1,7 @@
 # Geo
 
-`kroma_geo.measure` сохраняет геоутилиты, используемые backend. `kroma_geo.context` добавляет общий bbox/GeoJSON AOI, назначение региона по локальному FeatureCollection и расстояния до локальных объектов. Поддерживаются Polygon/MultiPolygon, отверстия и пересечение 180-го меридиана. Для быстрой работы с границами установить `kroma-geo[vector]` (Shapely), базовая реализация работает и без него. `kroma_geo.raster` обрабатывает локальные WorldCover COG и вычисляет NDVI/NBR; для растров установить `kroma-geo[raster]`. Реальные границы РФ, OSM extracts и тайлы COG не включены в Git; статус источников — в [каталоге](../docs/data/sources.md).
+`kroma_geo` предоставляет измерения, CRS-преобразования, raster/vector conversion, проверку геометрий, clipping и контекст AOI. Зависимости pyproj, shapely и rasterio объявлены в `pyproject.toml`.
+
+BS pixel area: 20×20 м = 0.04 га. Экспорт TRAIN считает площадь до преобразования в WGS84; analysis использует исходные контуры после обрезки AOI в равноплощадной EPSG:6933. Общие пиксельные границы densify до перепроекции, чтобы соседние severity-зоны не создавали численные пересечения. Проверка пересечений использует STRtree.
+
+Исторические контекстные модули допускают Polygon/MultiPolygon AOI; текущий service analysis контракт принимает bbox + даты. Реальные OSM/WorldCover/DEM источники и ограничения описаны в [каталоге источников](../docs/data/sources.md). TEST геопривязка запрещена контрактом проекта.

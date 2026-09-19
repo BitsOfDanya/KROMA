@@ -1,0 +1,28 @@
+{
+  "output": "tmp/integration-submission.csv",
+  "validation": {
+    "rows": 447,
+    "af_chips": 180,
+    "bs_chips": 89
+  },
+  "chips_failed": [],
+  "af_fire_pixels": 3977,
+  "bs_burn_pixels": 3900362,
+  "workers": 2,
+  "threads_per_worker": 2,
+  "stages_seconds": {
+    "bs_neural_incl_model_load_s": 19.81,
+    "worker_start_and_model_load_s": 0.01,
+    "af_and_bs_postprocess_parallel_s": 432.49,
+    "assemble_validate_write_s": 0.52
+  },
+  "total_seconds": 452.88,
+  "verify": {
+    "reference": "artifacts/submissions/submission_v006.csv",
+    "csv_identical": true
+  },
+  "csv_sha256": "4ad1876c70836b6a003629f4d1dda836f17d8070a59d2a5c88c29b50c024865a",
+  "reference_sha256": "4ad1876c70836b6a003629f4d1dda836f17d8070a59d2a5c88c29b50c024865a",
+  "cloudy_bs_chips_ge_50pct": 0,
+  "final_service_smoke": "BS_te_000001 exact"
+}

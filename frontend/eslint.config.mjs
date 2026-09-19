@@ -5,6 +5,7 @@ const config = [
   { ignores: ["public/**"] },
   ...nextCoreWebVitals,
   ...nextTypescript,
+  { files: ["src/features/predict/PredictionResult.tsx"], rules: { "@next/next/no-img-element": "off" } },
 ];
 
 export default config;

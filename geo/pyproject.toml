@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "kroma-geo"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["pyproj>=3.7,<4", "shapely>=2.0,<3"]
+dependencies = ["pyproj>=3.7,<4", "shapely>=2.0,<3", "rasterio>=1.4,<2"]
 
 [project.optional-dependencies]
 raster = ["rasterio"]

@@ -53,40 +53,23 @@ data/yandex/
 ml/models/
 frontend/public/maplibre/
 
-# Local environment
-.env
-.env.*
-!.env.example
-frontend/.env.local
-
-# Python / ML caches
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-
-# OS / IDE
-.DS_Store
-
-# Large intermediate ML data
-research/experiments/*.pkl
-research/experiments/*_cache.*
-research/experiments/*_oof.npy
-research/experiments/*_oof.npz
-
-# Runtime scratch
 tmp/
 temp/
-*.log
-
-# Local competition scratch outputs
+*.npy
+.coverage
+htmlcov/
+.cache/
+research/experiments/*_cache.*
+research/experiments/*_oof.npz
 artifacts/af_submission.csv
 artifacts/af_test_*
 artifacts/bs_submission*.csv
 artifacts/bs_test_*
 artifacts/submissions/candidates/
 artifacts/submissions/diagnostic/
-
-# Local source notebooks
 cosmohack_dataset*.ipynb
+best_class1.pt/
+.turbo/
+backend/.runtime/
+generated/previews/
+generated/tiles/

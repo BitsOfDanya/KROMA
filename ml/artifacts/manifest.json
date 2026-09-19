@@ -1,30 +1,29 @@
 {
   "created_at": "2026-09-19T14:16:01Z",
-  "af_model_version": "af-v001 (full-train LightGBM, 39 features, threshold 0.765; unchanged in v001-v005)",
-  "bs_model_version": "bs-v005 (v003 U-Net ensemble -> v004 refiner+physics -> component filter -> refiner2)",
+  "af_model_version": "af-v001",
+  "bs_model_version": "bs-v006",
   "provenance": {
-    "submission": "artifacts/submissions/submission_v005.csv",
-    "public_score": null,
+    "submission": "artifacts/submissions/submission_v006.csv",
+    "submission_sha256": "4ad1876c70836b6a003629f4d1dda836f17d8070a59d2a5c88c29b50c024865a",
+    "public_score": 0.8176,
     "oof_all_valid": {
-      "v004": 0.365234496973789,
-      "candidate": 0.42983220988552323
+      "v005": 0.42983,
+      "v006": 0.43552
     },
     "oof_strict": {
-      "v004": 0.38220288560979415,
-      "candidate": 0.4400924754222741
+      "v005": 0.44009,
+      "v006": 0.44677
     },
-    "oof_iou_all_valid": {
-      "v004": [
-        0.9224227932897262,
-        0.39910706380425964,
-        0.5664153800951366,
-        0.7235654446273284
+    "oof_per_fold_all_valid": {
+      "v005": [
+        0.4267,
+        0.4325,
+        0.4303
       ],
-      "candidate": [
-        0.9528923285225842,
-        0.5042666137648769,
-        0.6691951019991729,
-        0.7749762627785642
+      "v006": [
+        0.4332,
+        0.4349,
+        0.4383
       ]
     }
   },
@@ -60,16 +59,53 @@
       "source": "data/processed/bs_v004/refiner_full_v004.txt"
     },
     "bs_component": {
-      "path": "bs/v005_component.txt",
-      "bytes": 1041008,
-      "sha256": "2e4140c177379fac9a9ecf63c67abd6d2c5b4af9bf0608ce82377184317521e1",
-      "source": "data/processed/bs_v005/components/component_full_v005b_candidate.txt"
+      "path": "bs/v006/component_full_v006_rededge.txt",
+      "bytes": 1046913,
+      "sha256": "b6b84e582bb654a35a3c32d3cd94fee03778476d2427124b0ea4c71c53eddd41"
     },
     "bs_refiner2": {
-      "path": "bs/v005_refiner2.txt",
-      "bytes": 3543661,
-      "sha256": "eb0402ba422a3f27f8a7235cbe234829d0f4af7f3dbb13318a6db4320619c9ae",
-      "source": "data/processed/bs_v005/refiner2/refiner2_full_v005b_candidate.txt"
+      "path": "bs/v006/refiner2_full_v006_rededge.txt",
+      "bytes": 3550888,
+      "sha256": "21e92635934b7791b8c0d7b7ac478727405472a4ddc7386d31e7068d16520b2b"
+    }
+  },
+  "version": "v006",
+  "previous_stable": "v005",
+  "inputs": {
+    "af": "VIIRS I1-I5 + AUX official package",
+    "bs": "Sentinel-2 pre/post including B5/B6/B7/B8A + AUX + Sentinel-1 official package"
+  },
+  "outputs": {
+    "af": "binary mask + probability",
+    "bs": "mask 0/1/2/3 + burn probability"
+  },
+  "thresholds": {
+    "af": 0.765,
+    "component_remove": 0.3,
+    "pixel_add": 0.8,
+    "pixel_remove": 0.2
+  },
+  "runtime": {
+    "seed": 42,
+    "neural_isolation": "subprocess",
+    "competition": "one batched neural subprocess",
+    "device": "auto: cuda, mps, cpu"
+  },
+  "af_description": "af-v001 (full-train LightGBM, 39 features, threshold 0.765; unchanged in v001-v006)",
+  "previous_stable_registry": {
+    "version": "v005",
+    "public_score": 0.8127,
+    "submission": "artifacts/submissions/submission_v005.csv",
+    "shared_artifacts": "af_model, bs_neural_ndvi, bs_neural_dual, bs_thresholds, bs_v004_refiner",
+    "overrides": {
+      "bs_component": {
+        "path": "bs/v005_component.txt",
+        "sha256": "2e4140c177379fac9a9ecf63c67abd6d2c5b4af9bf0608ce82377184317521e1"
+      },
+      "bs_refiner2": {
+        "path": "bs/v005_refiner2.txt",
+        "sha256": "eb0402ba422a3f27f8a7235cbe234829d0f4af7f3dbb13318a6db4320619c9ae"
+      }
     }
   }
 }

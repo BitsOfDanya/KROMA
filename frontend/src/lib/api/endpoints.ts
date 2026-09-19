@@ -19,6 +19,7 @@ import type {
   Overview,
   RiskObjectKind,
   TimelineResponse,
+  TrainPrediction,
   TrainAsset,
   TrainChip,
   TrainChipKind,
@@ -37,7 +38,13 @@ export interface IncidentQuery {
 }
 
 const bboxParam = (bbox?: BBox | null, precision = 3) =>
-  bbox ? bbox.map((value) => (precision < 0 ? String(value) : value.toFixed(precision))).join(",") : undefined;
+  bbox
+    ? bbox
+        .map((value) =>
+          precision < 0 ? String(value) : value.toFixed(precision),
+        )
+        .join(",")
+    : undefined;
 
 const analysisParams = (query: AnalysisQuery) => ({
   dataset_id: query.datasetId,
@@ -48,7 +55,8 @@ const analysisParams = (query: AnalysisQuery) => ({
 });
 
 export const api = {
-  overview: (signal?: AbortSignal) => apiGet<Overview>("/api/v1/overview", {}, signal),
+  overview: (signal?: AbortSignal) =>
+    apiGet<Overview>("/api/v1/overview", {}, signal),
 
   incidents: (query: IncidentQuery = {}, signal?: AbortSignal) =>
     apiGet<IncidentList>(
@@ -66,24 +74,48 @@ export const api = {
     ),
 
   incident: (id: string, signal?: AbortSignal) =>
-    apiGet<IncidentDetail>(`/api/v1/incidents/${encodeURIComponent(id)}`, {}, signal),
+    apiGet<IncidentDetail>(
+      `/api/v1/incidents/${encodeURIComponent(id)}`,
+      {},
+      signal,
+    ),
 
   incidentObservations: (id: string, signal?: AbortSignal) =>
-    apiGet<FeatureCollection<HotspotProperties>>(`/api/v1/incidents/${encodeURIComponent(id)}/observations`, {}, signal),
+    apiGet<FeatureCollection<HotspotProperties>>(
+      `/api/v1/incidents/${encodeURIComponent(id)}/observations`,
+      {},
+      signal,
+    ),
 
   incidentTimeline: (id: string, signal?: AbortSignal) =>
-    apiGet<IncidentTimeline>(`/api/v1/incidents/${encodeURIComponent(id)}/timeline`, {}, signal),
+    apiGet<IncidentTimeline>(
+      `/api/v1/incidents/${encodeURIComponent(id)}/timeline`,
+      {},
+      signal,
+    ),
 
   incidentForecast: (id: string, signal?: AbortSignal) =>
-    apiGet<FeatureCollection>(`/api/v1/incidents/${encodeURIComponent(id)}/forecast`, {}, signal),
+    apiGet<FeatureCollection>(
+      `/api/v1/incidents/${encodeURIComponent(id)}/forecast`,
+      {},
+      signal,
+    ),
 
   timeline: (from: string, to: string, signal?: AbortSignal) =>
     apiGet<TimelineResponse>("/api/v1/timeline", { from, to }, signal),
 
-  histogram: (params: { from: string; to: string; bins: number; bbox?: BBox | null }, signal?: AbortSignal) =>
+  histogram: (
+    params: { from: string; to: string; bins: number; bbox?: BBox | null },
+    signal?: AbortSignal,
+  ) =>
     apiGet<ObservationHistogram>(
       "/api/v1/observations/histogram",
-      { from: params.from, to: params.to, bins: params.bins, bbox: bboxParam(params.bbox) },
+      {
+        from: params.from,
+        to: params.to,
+        bins: params.bins,
+        bbox: bboxParam(params.bbox),
+      },
       signal,
     ),
 
@@ -91,10 +123,16 @@ export const api = {
     apiGet<BurnScarList>("/api/v1/burn-scars", { region }, signal),
 
   burnScar: (id: string, signal?: AbortSignal) =>
-    apiGet<BurnScar>(`/api/v1/burn-scars/${encodeURIComponent(id)}`, {}, signal),
+    apiGet<BurnScar>(
+      `/api/v1/burn-scars/${encodeURIComponent(id)}`,
+      {},
+      signal,
+    ),
 
-  analytics: (params: { from?: string; to?: string; region?: string | null }, signal?: AbortSignal) =>
-    apiGet<AnalyticsSummary>("/api/v1/analytics/summary", params, signal),
+  analytics: (
+    params: { from?: string; to?: string; region?: string | null },
+    signal?: AbortSignal,
+  ) => apiGet<AnalyticsSummary>("/api/v1/analytics/summary", params, signal),
 
   analysis: {
     datasets: (signal?: AbortSignal) =>
@@ -107,7 +145,18 @@ export const api = {
         { ...analysisParams(query), expected_result_id: resultId },
         signal,
       ),
-    report: (query: AnalysisQuery, resultId: string, format: "csv" | "json", signal?: AbortSignal) =>
+    shapefile: (query: AnalysisQuery, resultId: string, signal?: AbortSignal) =>
+      apiDownload(
+        "/api/v1/analysis/export/shapefile",
+        { ...analysisParams(query), expected_result_id: resultId },
+        signal,
+      ),
+    report: (
+      query: AnalysisQuery,
+      resultId: string,
+      format: "csv" | "json",
+      signal?: AbortSignal,
+    ) =>
       apiDownload(
         "/api/v1/analysis/export/report",
         { ...analysisParams(query), expected_result_id: resultId, format },
@@ -116,52 +165,122 @@ export const api = {
   },
 
   live: {
-    status: (signal?: AbortSignal) => apiGet<LiveStatus>("/api/v1/live/status", {}, signal),
+    status: (signal?: AbortSignal) =>
+      apiGet<LiveStatus>("/api/v1/live/status", {}, signal),
     hotspots: (bbox: BBox | null, signal?: AbortSignal) =>
-      apiGet<FeatureCollection<HotspotProperties>>("/api/v1/live/hotspots", { bbox: bboxParam(bbox) }, signal),
+      apiGet<FeatureCollection<HotspotProperties>>(
+        "/api/v1/live/hotspots",
+        { bbox: bboxParam(bbox) },
+        signal,
+      ),
     incidents: (bbox: BBox | null, signal?: AbortSignal) =>
-      apiGet<FeatureCollection>("/api/v1/live/incidents", { bbox: bboxParam(bbox) }, signal),
+      apiGet<FeatureCollection>(
+        "/api/v1/live/incidents",
+        { bbox: bboxParam(bbox) },
+        signal,
+      ),
   },
 
   map: {
-    hotspots: (params: { bbox?: BBox | null; zoom?: number; from?: string; to?: string }, signal?: AbortSignal) =>
+    hotspots: (
+      params: { bbox?: BBox | null; zoom?: number; from?: string; to?: string },
+      signal?: AbortSignal,
+    ) =>
       apiGet<FeatureCollection<HotspotProperties>>(
         "/api/v1/map/hotspots",
-        { bbox: bboxParam(params.bbox), zoom: params.zoom, from: params.from, to: params.to },
+        {
+          bbox: bboxParam(params.bbox),
+          zoom: params.zoom,
+          from: params.from,
+          to: params.to,
+        },
         signal,
       ),
     perimeters: (bbox?: BBox | null, signal?: AbortSignal) =>
-      apiGet<FeatureCollection>("/api/v1/map/perimeters", { bbox: bboxParam(bbox) }, signal),
+      apiGet<FeatureCollection>(
+        "/api/v1/map/perimeters",
+        { bbox: bboxParam(bbox) },
+        signal,
+      ),
     burnScars: (bbox?: BBox | null, signal?: AbortSignal) =>
-      apiGet<FeatureCollection>("/api/v1/map/burn-scars", { bbox: bboxParam(bbox) }, signal),
-    riskObjects: (bbox?: BBox | null, kinds?: RiskObjectKind[], signal?: AbortSignal) =>
-      apiGet<FeatureCollection>("/api/v1/map/risk-objects", { bbox: bboxParam(bbox), kind: kinds }, signal),
+      apiGet<FeatureCollection>(
+        "/api/v1/map/burn-scars",
+        { bbox: bboxParam(bbox) },
+        signal,
+      ),
+    riskObjects: (
+      bbox?: BBox | null,
+      kinds?: RiskObjectKind[],
+      signal?: AbortSignal,
+    ) =>
+      apiGet<FeatureCollection>(
+        "/api/v1/map/risk-objects",
+        { bbox: bboxParam(bbox), kind: kinds },
+        signal,
+      ),
     thermalSources: (bbox?: BBox | null, signal?: AbortSignal) =>
-      apiGet<FeatureCollection>("/api/v1/map/thermal-sources", { bbox: bboxParam(bbox) }, signal),
+      apiGet<FeatureCollection>(
+        "/api/v1/map/thermal-sources",
+        { bbox: bboxParam(bbox) },
+        signal,
+      ),
     wind: (bbox?: BBox | null, signal?: AbortSignal) =>
-      apiGet<FeatureCollection>("/api/v1/map/wind", { bbox: bboxParam(bbox) }, signal),
+      apiGet<FeatureCollection>(
+        "/api/v1/map/wind",
+        { bbox: bboxParam(bbox) },
+        signal,
+      ),
     clouds: (bbox?: BBox | null, signal?: AbortSignal) =>
-      apiGet<FeatureCollection>("/api/v1/map/clouds", { bbox: bboxParam(bbox) }, signal),
+      apiGet<FeatureCollection>(
+        "/api/v1/map/clouds",
+        { bbox: bboxParam(bbox) },
+        signal,
+      ),
   },
 
   datasets: {
     train: (
-      params: { kind?: TrainChipKind; has_fire?: boolean; q?: string; limit?: number; offset?: number } = {},
+      params: {
+        kind?: TrainChipKind;
+        has_fire?: boolean;
+        q?: string;
+        limit?: number;
+        offset?: number;
+      } = {},
       signal?: AbortSignal,
     ) => apiGet<TrainChipList>("/api/v1/datasets/train", params, signal),
     chip: (chipId: string, signal?: AbortSignal) =>
-      apiGet<TrainChip>(`/api/v1/datasets/train/${encodeURIComponent(chipId)}`, {}, signal),
+      apiGet<TrainChip>(
+        `/api/v1/datasets/train/${encodeURIComponent(chipId)}`,
+        {},
+        signal,
+      ),
+    prediction: (chipId: string, signal?: AbortSignal) =>
+      apiGet<TrainPrediction>(
+        `/api/v1/datasets/train/${encodeURIComponent(chipId)}/prediction`,
+        {},
+        signal,
+      ),
+    overlayUrl: (chipId: string, layer: string, size = 512) =>
+      `${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/api/v1/datasets/train/${encodeURIComponent(chipId)}/overlay/${layer}?size=${size}`,
+    exportUrl: (chipId: string, format: "geojson" | "shp", layer = "pred") =>
+      `${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/api/v1/datasets/train/${encodeURIComponent(chipId)}/export?format=${format}&layer=${layer}`,
     previewUrl: (chipId: string, asset: TrainAsset, size = 512) =>
       `${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/api/v1/datasets/train/${encodeURIComponent(chipId)}/preview/${asset}?size=${size}`,
   },
 
   ml: {
-    status: (signal?: AbortSignal) => apiGet<MlStatus>("/api/v1/ml/status", {}, signal),
+    status: (signal?: AbortSignal) =>
+      apiGet<MlStatus>("/api/v1/ml/status", {}, signal),
     upload: (task: TrainChipKind, file: File, signal?: AbortSignal) => {
       const form = new FormData();
       form.set("task", task);
       form.set("file", file);
-      return apiPostForm<UploadPredictResult>("/api/v1/inference/upload", form, signal);
+      return apiPostForm<UploadPredictResult>(
+        "/api/v1/inference/upload",
+        form,
+        signal,
+      );
     },
   },
 };

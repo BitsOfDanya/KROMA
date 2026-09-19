@@ -15,6 +15,7 @@ sys.path.insert(0, str(REPO / "ml" / "src"))
 from kroma_geo.raster_vector import (
     ChipGeoreference,
     class_features,
+    mask_polygon,
     point_features,
     to_wgs84,
 )
@@ -87,10 +88,15 @@ def build(args: argparse.Namespace) -> None:
     )
 
     model_zones, reference_zones, hotspots, scenes = [], [], [], []
+    valid_cover = []
     for row in bs_rows:
         chip_id, ref = row["chip_id"], georef(row)
         result = service.predict_bs(chip_id)
-        after = f"{row['date_post']}T09:00:00Z"
+        valid = result["valid"] & (result["gt_mask"] != 255)
+        valid_geometry = mask_polygon(valid, ref)
+        if valid_geometry is not None:
+            valid_cover.append(to_wgs84(valid_geometry.segmentize(ref.gsd_x), ref.epsg))
+        after = f"{row['date_post']}T00:00:00Z"
         scenes.append(
             {
                 "scene_id": chip_id,
@@ -193,7 +199,7 @@ def build(args: argparse.Namespace) -> None:
         manifest = {
             "schema_version": "1.0",
             "dataset_id": f"kroma-official-train-{suffix}",
-            "dataset_version": "v005",
+            "dataset_version": "v006",
             "name": name,
             "description": description,
             "origin": origin,
@@ -203,21 +209,24 @@ def build(args: argparse.Namespace) -> None:
             "extent": [round(v, 6) for v in extent],
             "af_coverage": mapping(af_cover),
             "bs_coverage": mapping(bs_cover),
-            "bs_valid_coverage": mapping(bs_cover),
+            "bs_valid_coverage": mapping(unary_union(valid_cover)),
             "area_crs": "EPSG:6933",
             "source_crs": "EPSG:4326",
             "mask": {
                 "classes": {"0": "unburned", "1": "low", "2": "moderate", "3": "high"},
                 "nodata": 255,
                 "resolution_m": [20, 20],
-                "validity": "bs_coverage polygon",
+                "validity": (
+                    "BS pipeline valid pixels, excluding GT nodata; "
+                    "date-only BS acquisition normalized to 00:00 UTC"
+                ),
             },
             "observation_source": "Official competition train chips (Sentinel-2/VIIRS)",
             "temporal_rule": (
                 "Hotspots use acquired_at; burn zones use after_acquired_at; "
                 "both use inclusive UTC calendar dates."
             ),
-            "license": "Official competition data, non-commercial demo use",
+            "license": "Official competition data; subject to organizer terms",
             "attribution": "KROMA, official КосмоХакатон 2026 train data",
             "distribution": "Derived contours only; source rasters are not redistributed.",
             "example": {

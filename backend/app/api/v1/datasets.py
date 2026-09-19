@@ -13,9 +13,11 @@ from app.services.prediction import (
     feature_collection,
     overlay_png,
     prediction_payload,
+    raster_package,
+    validation_geometry,
 )
 from app.services.train_dataset import Asset, get_train_dataset_service
-from app.services.upload_decode import decode_upload
+from app.services.upload_decode import MAX_UPLOAD_BYTES, decode_upload
 
 router = APIRouter(tags=["datasets"])
 
@@ -81,8 +83,7 @@ def list_datasets(
         "competition_test": {
             "served": False,
             "note": (
-                "Официальный test анонимизирован: без координат и меток, "
-                "на карте не показывается."
+                "Официальный test анонимизирован: без координат и меток, на карте не показывается."
             ),
         },
     }
@@ -117,7 +118,7 @@ def preview_train_asset(
     return Response(
         content=png,
         media_type="image/png",
-        headers={"Cache-Control": "public, max-age=3600"},
+        headers={"Cache-Control": "no-cache"},
     )
 
 
@@ -130,14 +131,14 @@ def train_prediction(chip_id: str) -> dict[str, Any]:
 @router.get("/datasets/train/{chip_id}/overlay/{layer}")
 def train_overlay(
     chip_id: str,
-    layer: Literal["pred", "gt", "error"],
+    layer: Literal["pred", "gt", "error", "probability"],
     size: int = Query(512, ge=64, le=1024),
 ) -> Response:
     kind = get_train_dataset_service().get_chip(chip_id)["kind"]
     return Response(
         content=overlay_png(kind, chip_id, layer, size=size),
         media_type="image/png",
-        headers={"Cache-Control": "public, max-age=3600"},
+        headers={"Cache-Control": "no-cache"},
     )
 
 
@@ -168,12 +169,7 @@ def train_export(
 @router.get("/models", summary="Final model versions, artifacts and validated metrics")
 def models() -> dict[str, Any]:
     status = get_ml_service().status()
-    return {
-        "af": status["af"],
-        "bs": status["bs"],
-        "artifacts_root": status["artifacts_root"],
-        "provenance": status["provenance"],
-    }
+    return status
 
 
 @router.get("/ml/status")
@@ -196,7 +192,7 @@ async def inference_upload(
     task: Literal["af", "bs"] = Form("af"),
     file: UploadFile = File(...),
 ) -> dict:
-    data = await file.read()
+    data = await file.read(MAX_UPLOAD_BYTES + 1)
     decoded = decode_upload(file.filename or "upload.bin", data)
     decoded.pop("array", None)
     status = get_ml_service().status()
@@ -210,3 +206,17 @@ async def inference_upload(
         "mask_png_b64": None,
         "metrics": {},
     }
+
+
+@router.get("/datasets/train/{chip_id}/rasters")
+def train_rasters(chip_id: str) -> Response:
+    return Response(
+        raster_package(chip_id),
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{chip_id}-rasters.npz"'},
+    )
+
+
+@router.get("/datasets/train/{chip_id}/geometry")
+def train_geometry(chip_id: str, layer: Literal["gt", "pred", "error"] = "pred") -> dict:
+    return validation_geometry(chip_id, layer)

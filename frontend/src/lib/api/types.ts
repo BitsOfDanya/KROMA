@@ -1,10 +1,12 @@
 export type Position = [number, number];
 export type BBox = [number, number, number, number];
 
-export type IncidentStatus = "suspected" | "confirmed" | "monitoring" | "localized";
+export type IncidentStatus =
+  "suspected" | "confirmed" | "monitoring" | "localized";
 export type Severity = "critical" | "high" | "medium" | "low";
 export type ForecastLevel = "p50" | "p80" | "p95";
-export type RiskObjectKind = "settlement" | "power_line" | "road" | "infrastructure" | "protected_area";
+export type RiskObjectKind =
+  "settlement" | "power_line" | "road" | "infrastructure" | "protected_area";
 export type ObservationClass = "incident" | "persistent_source" | "unassigned";
 export type BurnSeverity = "low" | "moderate" | "high";
 export type TimelineEventKind =
@@ -133,8 +135,18 @@ export interface IncidentDetail extends IncidentSummary {
   evidence: EvidenceItem[];
   exposures: RiskExposure[];
   next_passes: SatellitePass[];
-  perimeter: { observed_at: string; source: string; area_ha: number; front_length_km: number } | null;
-  forecast: { level: ForecastLevel; area_ha: number; horizon_hours: number; issued_at: string }[];
+  perimeter: {
+    observed_at: string;
+    source: string;
+    area_ha: number;
+    front_length_km: number;
+  } | null;
+  forecast: {
+    level: ForecastLevel;
+    area_ha: number;
+    horizon_hours: number;
+    issued_at: string;
+  }[];
   burn_scar_id: string | null;
   weather?: {
     temperature_c: number;
@@ -157,7 +169,12 @@ export interface IncidentTimeline {
   incident_id: string;
   events: TimelineEvent[];
   snapshots: IncidentSnapshot[];
-  perimeters: { observed_at: string; valid_until: string | null; area_ha: number; source: string }[];
+  perimeters: {
+    observed_at: string;
+    valid_until: string | null;
+    area_ha: number;
+    source: string;
+  }[];
   passes: SatellitePass[];
 }
 
@@ -262,7 +279,13 @@ export interface AnalyticsSummary {
     high_severity_ha: number;
     mean_confirmation_minutes: number;
   }[];
-  regions: { region_id: string; name: string; incidents: number; burned_area_ha: number; high_severity_ha: number }[];
+  regions: {
+    region_id: string;
+    name: string;
+    incidents: number;
+    burned_area_ha: number;
+    high_severity_ha: number;
+  }[];
   largest_burn_scars: BurnScarSummary[];
 }
 
@@ -293,7 +316,19 @@ export type AnalysisOrigin = "model_output" | "reference" | "synthetic_demo";
 export type CoverageStatus = "full" | "partial" | "none";
 
 export type TrainChipKind = "af" | "bs";
-export type TrainAsset = "mask" | "viirs" | "aux" | "s2_pre" | "s2_post" | "s1_pre" | "s1_post";
+export type TrainAsset =
+  | "mask"
+  | "viirs"
+  | "aux"
+  | "s2_pre"
+  | "s2_post"
+  | "s1_pre"
+  | "s1_post"
+  | "i4"
+  | "i5"
+  | "thermal_difference"
+  | "dnbr"
+  | "landcover";
 
 export interface TrainChip {
   id: string;
@@ -492,4 +527,33 @@ export interface AnalysisResult {
     precision: string;
   };
   generated_at: string;
+}
+
+export interface TrainPrediction {
+  chip_id: string;
+  kind: TrainChipKind;
+  status: "ok" | "unavailable";
+  detail?: string;
+  model_version: string;
+  cache_hit?: boolean;
+  runtime_ms: { model: number; vectorize: number; total: number } | null;
+  prediction?: { scope: string; note: string };
+  metrics?: {
+    tp?: number;
+    fp?: number;
+    fn?: number;
+    precision?: number;
+    recall?: number;
+    f1?: number;
+    iou_burn?: number;
+    miou_severity?: number;
+    confusion?: number[][];
+  };
+  n_fire_px?: number;
+  total_area_ha?: number;
+  area_low_ha?: number;
+  area_moderate_ha?: number;
+  area_high_ha?: number;
+  polygons: Feature[];
+  thermopoints: Feature[];
 }

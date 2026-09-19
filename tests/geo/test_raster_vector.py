@@ -63,3 +63,23 @@ def test_point_features_are_pixel_centres_and_capped() -> None:
     points = point_features(mask, GEOREF, scene_id="S", model_version="t", source="x", limit=3)
     assert len(points) == 3
     assert {p["properties"]["row"] for p in points} <= {3, 10, 11}
+
+
+def test_neighboring_projected_classes_remain_disjoint() -> None:
+    import numpy as np
+    from kroma_geo.raster_vector import ChipGeoreference, class_features
+    from kroma_geo.vector import assert_non_overlapping
+
+    mask = np.ones((30, 30), dtype=np.uint8)
+    mask[10:20, 10:20] = 2
+    georef = ChipGeoreference(32637, 614400, 5263360, 20, 20)
+    features = class_features(
+        mask,
+        georef,
+        classes={1: "low", 2: "moderate"},
+        scene_id="test",
+        model_version="test",
+        source="synthetic",
+    )
+    assert_non_overlapping([f["geometry"] for f in features])
+    assert sum(f["properties"]["area_ha"] for f in features) == 36

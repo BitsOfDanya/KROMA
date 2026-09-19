@@ -15,6 +15,7 @@ from kroma_ml import artifacts
 from kroma_ml.artifacts import AF_VERSION, BS_VERSION, REPO, resolve
 
 BS_RULE = {"comp_remove_below": 0.3, "refiner2_add_at_or_above": 0.8, "refiner2_remove_below": 0.2}
+NEURAL_DEVICE = "auto"
 PIXEL_HA = 20 * 20 / 10_000
 
 
@@ -59,6 +60,7 @@ def predict_af(chip_id: str, root: str | None = None) -> dict:
     out = {
         "chip_id": chip_id,
         "model_version": AF_VERSION,
+        "device": "cpu",
         "mask": mask,
         "probability": proba.astype(np.float32),
         "valid": valid,
@@ -70,6 +72,7 @@ def predict_af(chip_id: str, root: str | None = None) -> dict:
     if gt is not None:
         out["gt_mask"] = gt.astype(np.uint8)
         out["error_map"] = error_map(mask, gt.astype(np.uint8))
+        out["error_map"][~valid] = 0
     return out
 
 
@@ -86,17 +89,20 @@ def bs_models() -> dict:
 
 
 def bs_logits_subprocess(chip_ids: list[str], root: str, with_mask: bool) -> dict[str, np.ndarray]:
+    global NEURAL_DEVICE
     with tempfile.TemporaryDirectory() as tmp:
         cmd = [sys.executable, "-m", "kroma_ml.bs_neural", "--root", root, "--out-dir", tmp]
         if with_mask:
             cmd.append("--with-mask")
         subprocess.run([*cmd, *chip_ids], check=True, capture_output=True)
+        NEURAL_DEVICE = json.loads((Path(tmp) / "runtime.json").read_text())["device"]
         return {cid: np.load(Path(tmp) / f"{cid}.npy") for cid in chip_ids}
 
 
 def predict_bs(chip_id: str, root: str | None = None, logits: np.ndarray | None = None) -> dict:
     from kroma_ml.bs_crop import load_raw
     from kroma_ml.bs_physics import spectral_indices
+    from kroma_ml.bs_rededge import RE_PIX, comp_stats, rededge_maps_root, ring_contrast
     from kroma_ml.bs_v004 import group_map, organizer_severity, pixel_features, threshold_map
     from kroma_ml.bs_v005 import compose_labels
     from kroma_ml.bs_v005_stages import FEATURES, chip_features, component_table, v004_test_maps
@@ -119,13 +125,27 @@ def predict_bs(chip_id: str, root: str | None = None, logits: np.ndarray | None 
     lc = group_map(raw.landcover, th)
     valid = ~np.isin(raw.scl_pre, (0, 1)) & ~np.isin(raw.scl_post, (0, 1))
     lab, feats = component_table(1 - probs[0], base, dnbr, dnbr - tmap[0], org, lc, valid)
+    rededge = rededge_maps_root(chip_id, root)
+    extra = np.concatenate(
+        [
+            comp_stats(lab, [rededge[k] for k in RE_PIX[:7]]),
+            np.stack(
+                [ring_contrast(lab, rededge["dB5"]), ring_contrast(lab, rededge["dNDRE7"])], 1
+            ).reshape(-1, 2),
+        ],
+        1,
+    )
+    feats = np.concatenate([feats, extra], 1)
     cp = np.concatenate([[1.0], m["component"].predict(feats) if len(feats) else []])[lab]
     f, zone = chip_features(raw, probs, base, th)
     sel = np.nonzero(zone.ravel())[0]
     r2 = np.zeros(base.size, np.float32)
     if len(sel):
         X = np.stack([np.asarray(f[n], np.float32).ravel()[sel] for n in FEATURES], 1)
-        r2[sel] = m["refiner2"].predict(X.astype(np.float16).astype(np.float32))
+        extra_pixels = np.stack([rededge[k].ravel()[sel] for k in RE_PIX], 1)
+        X = X.astype(np.float16).astype(np.float32)
+        extra_pixels = extra_pixels.astype(np.float16).astype(np.float32)
+        r2[sel] = m["refiner2"].predict(np.concatenate([X, extra_pixels], 1))
     r2 = r2.reshape(base.shape)
     base_burn = base > 0
     removed = (lab > 0) & (cp < BS_RULE["comp_remove_below"])
@@ -143,6 +163,7 @@ def predict_bs(chip_id: str, root: str | None = None, logits: np.ndarray | None 
     out = {
         "chip_id": chip_id,
         "model_version": BS_VERSION,
+        "device": NEURAL_DEVICE,
         "mask": mask,
         "burn_mask": (mask > 0).astype(np.uint8),
         "burn_probability": burn_conf,
@@ -160,6 +181,7 @@ def predict_bs(chip_id: str, root: str | None = None, logits: np.ndarray | None 
         gt = raw.mask.astype(np.uint8)
         out["gt_mask"] = gt
         out["error_map"] = error_map(mask, gt)
+        out["error_map"][~valid | (gt == 255)] = 0
     return out
 
 

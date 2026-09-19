@@ -10,6 +10,7 @@ dependencies = [
   "fastapi>=0.115,<1",
   "httpx>=0.28,<1",
   "kroma-geo",
+  "kroma-ml",
   "numpy>=2.0,<3",
   "pillow>=10,<12",
   "pydantic>=2.9,<3",
@@ -24,4 +25,4 @@ where = ["."]
 include = ["app*"]
 
 [tool.setuptools.package-data]
-app = ["prepared_data/*.json"]
+app = ["prepared_data/**/*.json", "prepared_data/**/*.geojson"]

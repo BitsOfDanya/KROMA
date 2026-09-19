@@ -125,6 +125,8 @@ def run(
     frame = template[["chip_id", "class_id"]].copy()
     frame["rle"] = [rles[(c, int(k))] for c, k in zip(frame.chip_id, frame.class_id, strict=True)]
     validation = validate_frame(frame, template, meta)
+    if errors:
+        raise RuntimeError("Inference failed; submission was not written: " + "; ".join(errors))
     output.parent.mkdir(parents=True, exist_ok=True)
     frame.to_csv(output, index=False)
     stages["assemble_validate_write_s"] = time.perf_counter() - t0
@@ -164,12 +166,16 @@ def main() -> None:
     p.add_argument("--profile", type=Path, default=None, help="write the timing report as JSON")
     p.add_argument("--verify-against", type=Path, default=None)
     args = p.parse_args()
+    if args.workers < 1 or args.threads < 0:
+        p.error("workers must be positive and threads nonnegative")
     if args.artifacts:
         os.environ["KROMA_ML_ARTIFACTS_PATH"] = str(args.artifacts)
     threads = args.threads or max(1, (os.cpu_count() or 1) // args.workers)
     report = run(args.data_dir, args.output, args.workers, threads, args.template)
     if args.verify_against:
         report["verify"] = verify_against(args.output, args.verify_against)
+        if not report["verify"]["csv_identical"]:
+            raise SystemExit("Submission differs from reference")
     if args.profile:
         args.profile.parent.mkdir(parents=True, exist_ok=True)
         args.profile.write_text(json.dumps(report, indent=2))

@@ -1,7 +1,11 @@
-# ML / active-fire intelligence
+# ML
 
-`kroma_ml.incidents` — исследовательский DBSCAN по пространству и времени; `thermal_memory` — разреженная равноплощадная историческая сетка; `features` — таблица входных признаков без меток; `priority` — объяснимые формулы threat и priority для уже подготовленных входов. Это независимый fixed-data baseline; backend LIVE не переключён на него.
+Production contract: `kroma_ml.service.predict_af` / `predict_bs`. CURRENT GOLD v006. Competition CLI: `python inference.py --data-dir data/test --output tmp/submission.csv`. Backend и competition используют один adapter. Полный запуск, веса, API и ограничения — в [README](../README.md); описание моделей — [model card](../docs/model_card.md); перенос из исследований — [handoff](../docs/ml_handoff.md).
 
-В [едином отчёте](../research/report.md) указаны реальные пилоты, ограничения confidence и необходимые метки. Классификатор `P(real wildfire)` не обучался: подтверждённых incident labels пока нет.
+## Исследования и обучение
 
-Отдельная конкурсная AF сегментация работает с размеченными чипами организаторов: `af_infer.AFPredictor` для LightGBM и `af_unet.AFUNetPredictor` для сохранённого U-Net checkpoint. Оба выдают бинарную маску 256×256, без подключения к общему сервису. Выбор AF модели и ограничения validation приведены в том же отчёте.
+В product integration обучение не выполнялось. Исторические training-программы и результаты сохранены в `research/experiments` и [research/report.md](../research/report.md).
+
+AF full-train bundle воспроизводится исследовательским `python research/experiments/af_final_model.py` при наличии TRAIN и описанных в отчёте кэшей hard negatives. BS training-контракт доступен через `python research/experiments/bs_track.py --help`; конфигурации ансамбля и сохранённые normalization/channel_names перечислены в checkpoint metadata. Full refiners строились последовательно v004 → v005 → red-edge v006; `research/experiments/bs_v006_infer.py` содержит обучение и требует OOF/cache inputs. Это исследовательская цепочка, не команда установки production.
+
+Для запуска готовой модели достаточно 7 файлов из `artifacts/manifest.json`. Файлы raw/OOF в `data/processed` не нужны inference. Архивные DBSCAN/thermal-memory/priority модули сохранены как исследовательская история; LIVE backend не выдаёт их за обученный `P(real wildfire)`.

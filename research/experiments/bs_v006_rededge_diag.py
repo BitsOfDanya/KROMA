@@ -5,7 +5,6 @@ import numpy as np
 from bs_v004_fasttrack import THRESHOLDS
 from bs_v005_contour_diag import CROP, GRASS
 from bs_v006_prep import V005_OOF
-from kroma_ml.bs_cv import valid_mask
 from kroma_ml.bs_data import load_chip, load_meta
 from kroma_ml.bs_physics import _nd
 from kroma_ml.bs_v004 import group_map, load_thresholds, organizer_severity, threshold_map

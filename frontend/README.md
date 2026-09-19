@@ -1,23 +1,11 @@
 # Frontend
 
-Next.js 16 (App Router) + TypeScript + MapLibre GL. Оперативная карта, инциденты, таймлайн с ретроспективой, аналитика, режимы LIVE/REPLAY. Обзор экранов и фич — в корневом [README](../README.md).
+Существующий дизайн KROMA: Next.js / React / TypeScript, MapLibre, Zustand, TanStack Query.
 
-Локально:
+Из корня: `npm ci --prefix frontend`, затем `npm run dev --prefix frontend`. Backend по умолчанию http://127.0.0.1:8000; `KROMA_BACKEND_URL` меняет proxy при запуске/сборке. `NEXT_PUBLIC_API_BASE_URL` задаёт прямой origin API вместо proxy, если это нужно deployment.
 
-```bash
-npm install
-npm run dev
-```
+Страницы: Overview `/`, Events `/events`, Analytics `/analytics`, Analysis `/analytics?tab=area`, Data `/explorer`, Predict `/predict`, About `/about`, Research `/research`. Operator menu содержит сведения о команде.
 
-Страница на `http://localhost:3000`. Backend по умолчанию ожидается на `http://localhost:8000` (переопределяется через `NEXT_PUBLIC_API_BASE_URL`).
+SCENARIO явно помечает синтетическую динамику. TRAIN prediction показывает in-sample предупреждение. TEST не наносится на карту. Predict принимает существующий полный TRAIN package; JPEG не выдаётся за вход модели.
 
-Скрипты:
-
-```bash
-npm run typecheck   # tsc --noEmit
-npm run lint        # eslint
-npm run build       # production-сборка (next build)
-npx vitest run      # unit-тесты (lib/*)
-```
-
-Структура — `src/app` (страницы), `src/features` (карта, инциденты, таймлайн, слои, аналитика — по фиче), `src/lib/api` (типизированный клиент + React Query хуки), `src/state` (Zustand: тема, режим, фильтры), `src/config/map.ts` (провайдеры тайлов, переопределяются через `NEXT_PUBLIC_MAP_*`).
+Проверки: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` из `frontend`. Полная инструкция и demo — в корневом [README](../README.md).

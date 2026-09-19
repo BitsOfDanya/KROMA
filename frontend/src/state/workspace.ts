@@ -84,6 +84,10 @@ interface WorkspaceState {
   appMode: AppMode;
   mapProfile: MapProfile;
   selectedIncidentId: string | null;
+  selectedTrainChipId: string | null;
+  trainValidationLayer: "gt" | "pred" | "error";
+  selectTrainChip: (id: string | null) => void;
+  setTrainValidationLayer: (layer: "gt" | "pred" | "error") => void;
   panel: Panel;
   basemap: BasemapMode;
   evidenceMode: EvidenceMode;
@@ -128,6 +132,11 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
   appMode: "replay",
   mapProfile: "ops",
   selectedIncidentId: null,
+  selectedTrainChipId: null,
+  trainValidationLayer: "pred",
+  selectTrainChip: (selectedTrainChipId) => set({ selectedTrainChipId }),
+  setTrainValidationLayer: (trainValidationLayer) =>
+    set({ trainValidationLayer }),
   panel: "incidents",
   basemap: "map",
   evidenceMode: "events",
@@ -144,7 +153,14 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
   measuring: false,
   camera: null,
   setAppMode: (appMode) =>
-    set({ appMode, selectedIncidentId: null, playing: false, cursor: null, panel: "incidents", mapProfile: "ops" }),
+    set({
+      appMode,
+      selectedIncidentId: null,
+      playing: false,
+      cursor: null,
+      panel: "incidents",
+      mapProfile: "ops",
+    }),
   setMapProfile: (mapProfile) =>
     set((state) =>
       mapProfile === "fireWeather"
@@ -162,21 +178,35 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
           },
     ),
   selectIncident: (id) => set({ selectedIncidentId: id }),
-  togglePanel: (panel) => set((state) => ({ panel: state.panel === panel ? null : panel })),
+  togglePanel: (panel) =>
+    set((state) => ({ panel: state.panel === panel ? null : panel })),
   closePanel: () => set({ panel: null }),
   setBasemap: (basemap) => set({ basemap }),
   setEvidenceMode: (evidenceMode) =>
     set((state) => ({
       evidenceMode,
-      layers: { ...state.layers, rawDetections: evidenceMode === "data", incidents: true },
+      layers: {
+        ...state.layers,
+        rawDetections: evidenceMode === "data",
+        incidents: true,
+      },
     })),
   toggleLayer: (id) =>
     set((state) => {
       const layers = { ...state.layers, [id]: !state.layers[id] };
-      const evidenceMode = id === "rawDetections" ? (layers.rawDetections ? "data" : "events") : state.evidenceMode;
+      const evidenceMode =
+        id === "rawDetections"
+          ? layers.rawDetections
+            ? "data"
+            : "events"
+          : state.evidenceMode;
       return { layers, evidenceMode, mapProfile: "ops" };
     }),
-  setLayer: (id, visible) => set((state) => ({ layers: { ...state.layers, [id]: visible }, mapProfile: "ops" })),
+  setLayer: (id, visible) =>
+    set((state) => ({
+      layers: { ...state.layers, [id]: visible },
+      mapProfile: "ops",
+    })),
   setQueueFilter: (queueFilter) => set({ queueFilter }),
   setRegion: (regionId) => set({ regionId }),
   toggleStatus: (status) =>
@@ -191,7 +221,8 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
   setCursor: (cursor) => set({ cursor }),
   setPlaying: (playing) => set({ playing }),
   setSpeed: (speed) => set({ speed }),
-  toggleTimelineExpanded: () => set((state) => ({ timelineExpanded: !state.timelineExpanded })),
+  toggleTimelineExpanded: () =>
+    set((state) => ({ timelineExpanded: !state.timelineExpanded })),
   setMeasuring: (measuring) => set({ measuring }),
   requestCamera: (request) => {
     cameraNonce += 1;

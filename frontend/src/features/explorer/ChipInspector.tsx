@@ -1,11 +1,14 @@
 "use client";
 
-/* Dynamic API / data-URI previews — next/image is not useful here. */
 /* eslint-disable @next/next/no-img-element */
 
 import { ArrowLeft, Layers, Satellite, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+
+import { PredictionResult } from "@/features/predict/PredictionResult";
+
+import { useWorkspace } from "@/state/workspace";
 
 import { Card } from "@/components/ui/Card";
 import { ErrorMessage, StateMessage } from "@/components/ui/StateMessage";
@@ -58,12 +61,24 @@ function BeforeAfterSlider({
   return (
     <div className={styles.sliderWrap}>
       <div className={styles.sliderStage}>
-        <img className={styles.sliderBase} src={post} alt="Sentinel-2 после пожара" />
+        <img
+          className={styles.sliderBase}
+          src={post}
+          alt="Sentinel-2 после пожара"
+        />
         <div className={styles.sliderBefore} style={{ width: `${pos}%` }}>
-          <img src={pre} alt="Sentinel-2 до пожара" style={{ width: `${10000 / Math.max(pos, 1)}%` }} />
+          <img
+            src={pre}
+            alt="Sentinel-2 до пожара"
+            style={{ width: `${10000 / Math.max(pos, 1)}%` }}
+          />
         </div>
         {showSeverity && (
-          <img className={styles.severityOverlay} src={mask} alt="GT severity" />
+          <img
+            className={styles.severityOverlay}
+            src={mask}
+            alt="GT severity"
+          />
         )}
         <div className={styles.sliderHandle} style={{ left: `${pos}%` }} />
         <span className={styles.sliderTag} data-side="before">
@@ -88,7 +103,15 @@ function BeforeAfterSlider({
   );
 }
 
-function AssetThumb({ chipId, asset, label }: { chipId: string; asset: TrainAsset; label: string }) {
+function AssetThumb({
+  chipId,
+  asset,
+  label,
+}: {
+  chipId: string;
+  asset: TrainAsset;
+  label: string;
+}) {
   return (
     <figure className={styles.thumb}>
       <img src={api.datasets.previewUrl(chipId, asset, 320)} alt={label} />
@@ -100,7 +123,9 @@ function AssetThumb({ chipId, asset, label }: { chipId: string; asset: TrainAsse
 function AfInspector({ chip }: { chip: TrainChip }) {
   const ml = useMlStatus();
   const [mode, setMode] = useState<AfMode>("ground_truth");
-  const predictionReady = Boolean(ml.data?.af.ready && chip.inspector?.prediction_available);
+  const predictionReady = Boolean(
+    ml.data?.af.ready && chip.inspector?.prediction_available,
+  );
 
   return (
     <div className={styles.inspectorBody}>
@@ -129,43 +154,33 @@ function AfInspector({ chip }: { chip: TrainChip }) {
       <div className={styles.viewerGrid}>
         {mode === "ground_truth" && (
           <>
-            <AssetThumb chipId={chip.chip_id} asset="viirs" label="VIIRS I1–I5" />
+            <AssetThumb chipId={chip.chip_id} asset="i4" label="I4" />
+            <AssetThumb chipId={chip.chip_id} asset="i5" label="I5" />
+            <AssetThumb
+              chipId={chip.chip_id}
+              asset="thermal_difference"
+              label="I4 − I5"
+            />
             <AssetThumb chipId={chip.chip_id} asset="mask" label="GT mask" />
             <AssetThumb chipId={chip.chip_id} asset="aux" label="AUX" />
           </>
         )}
-        {mode === "prediction" && (
-          <div className={styles.notice}>
-            {predictionReady ? (
-              <p>AF prediction overlay будет здесь после монтирования весов.</p>
-            ) : (
-              <p>
-                Веса LightGBM AF не смонтированы (`ml/artifacts/af/lightgbm.joblib`). Показан только official TRAIN
-                ground truth. {chip.inspector?.prediction_note}
-              </p>
-            )}
-            <AssetThumb chipId={chip.chip_id} asset="mask" label="GT (reference)" />
-          </div>
-        )}
-        {mode === "difference" && (
-          <div className={styles.notice}>
-            <p>
-              TP / FP / FN появятся после инференса. Пока доступен только эталон:{" "}
-              <strong>{num(chip.n_fire_px, 0)}</strong> fire px · valid {pct(chip.valid_frac)}.
-            </p>
-            <div className={styles.legendCompact}>
-              <span data-tone="tp">TP</span>
-              <span data-tone="fp">FP</span>
-              <span data-tone="fn">FN</span>
-            </div>
-          </div>
-        )}
+        {mode !== "ground_truth" &&
+          (predictionReady ? (
+            <PredictionResult
+              key={`${chip.chip_id}-${mode}`}
+              chipId={chip.chip_id}
+              initialLayer={mode === "difference" ? "error" : "pred"}
+            />
+          ) : (
+            <p>{chip.inspector?.prediction_note}</p>
+          ))}
       </div>
 
       <dl className={styles.metrics}>
         <div>
           <dt>Precision / Recall / F1</dt>
-          <dd>н/д без prediction</dd>
+          <dd>Откройте «Предсказание» для расчёта</dd>
         </div>
         <div>
           <dt>n_fire_px</dt>
@@ -185,11 +200,16 @@ function BsInspector({ chip }: { chip: TrainChip }) {
   const [compare, setCompare] = useState<BsCompare>("ground_truth");
   const [layer, setLayer] = useState<BsLayer>("mask");
   const shares = severityShares(chip);
-  const predictionReady = Boolean(ml.data?.bs.ready && chip.inspector?.prediction_available);
+  const predictionReady = Boolean(
+    ml.data?.bs.ready && chip.inspector?.prediction_available,
+  );
 
   return (
     <div className={styles.inspectorBody}>
-      <BeforeAfterSlider chipId={chip.chip_id} showSeverity={layer === "mask"} />
+      <BeforeAfterSlider
+        chipId={chip.chip_id}
+        showSeverity={layer === "mask"}
+      />
 
       <div className={styles.modeRow} role="tablist" aria-label="GT vs Model">
         {(
@@ -238,10 +258,19 @@ function BsInspector({ chip }: { chip: TrainChip }) {
         <div className={styles.notice}>
           <ShieldAlert size={16} />
           <p>
-            BS GOLD/v004 веса не смонтированы — IoU и prediction overlay недоступны. Эталон severity и before/after
-            работают на official TRAIN.
+            BS GOLD v006 веса не смонтированы — IoU и prediction overlay
+            недоступны. Эталон severity и before/after работают на official
+            TRAIN.
           </p>
         </div>
+      )}
+
+      {compare !== "ground_truth" && predictionReady && (
+        <PredictionResult
+          key={`${chip.chip_id}-${compare}`}
+          chipId={chip.chip_id}
+          initialLayer={compare === "errors" ? "error" : "pred"}
+        />
       )}
 
       <div className={styles.splitRow}>
@@ -254,8 +283,8 @@ function BsInspector({ chip }: { chip: TrainChip }) {
           </div>
           {shares ? (
             <p className={styles.metaLine}>
-              GT composition · Low {shares.low.toFixed(0)}% · Moderate {shares.moderate.toFixed(0)}% · High{" "}
-              {shares.high.toFixed(0)}%
+              GT composition · Low {shares.low.toFixed(0)}% · Moderate{" "}
+              {shares.moderate.toFixed(0)}% · High {shares.high.toFixed(0)}%
             </p>
           ) : (
             <p className={styles.metaLine}>Нет burn pixels в маске</p>
@@ -274,7 +303,9 @@ function BsInspector({ chip }: { chip: TrainChip }) {
 
         <aside className={styles.explain}>
           <h3>Почему участок повреждён</h3>
-          <p className={styles.explainHint}>Фактические признаки сцены — не сгенерированный текст.</p>
+          <p className={styles.explainHint}>
+            Фактические признаки сцены — не сгенерированный текст.
+          </p>
           <dl>
             <div>
               <dt>Burn area (GT)</dt>
@@ -289,7 +320,8 @@ function BsInspector({ chip }: { chip: TrainChip }) {
             <div>
               <dt>Severity px (1/2/3)</dt>
               <dd>
-                {num(chip.sev1_px, 0)} / {num(chip.sev2_px, 0)} / {num(chip.sev3_px, 0)}
+                {num(chip.sev1_px, 0)} / {num(chip.sev2_px, 0)} /{" "}
+                {num(chip.sev3_px, 0)}
               </dd>
             </div>
             <div>
@@ -298,7 +330,11 @@ function BsInspector({ chip }: { chip: TrainChip }) {
             </div>
             <div>
               <dt>Physics prior</dt>
-              <dd>{predictionReady ? "из pipeline" : "доступен после mount artifacts"}</dd>
+              <dd>
+                {predictionReady
+                  ? "из pipeline"
+                  : "доступен после mount artifacts"}
+              </dd>
             </div>
             <div>
               <dt>Refiner result</dt>
@@ -310,7 +346,14 @@ function BsInspector({ chip }: { chip: TrainChip }) {
             </div>
           </dl>
           {layer === "aux" && (
-            <AssetThumb chipId={chip.chip_id} asset="aux" label="AUX (physics / landcover context)" />
+            <>
+              <AssetThumb chipId={chip.chip_id} asset="dnbr" label="dNBR" />
+              <AssetThumb
+                chipId={chip.chip_id}
+                asset="landcover"
+                label="Landcover"
+              />
+            </>
           )}
         </aside>
       </div>
@@ -318,7 +361,13 @@ function BsInspector({ chip }: { chip: TrainChip }) {
   );
 }
 
-export function ChipInspector({ chipId, onClose }: { chipId: string; onClose?: () => void }) {
+export function ChipInspector({
+  chipId,
+  onClose,
+}: {
+  chipId: string;
+  onClose?: () => void;
+}) {
   const chipQuery = useTrainChip(chipId);
   const chip = chipQuery.data;
 
@@ -346,7 +395,9 @@ export function ChipInspector({ chipId, onClose }: { chipId: string; onClose?: (
           <div>
             <div className={styles.badges}>
               <span data-origin="official_train">OFFICIAL TRAIN</span>
-              <span data-kind={chip?.kind ?? "af"}>{(chip?.kind ?? "…").toUpperCase()}</span>
+              <span data-kind={chip?.kind ?? "af"}>
+                {(chip?.kind ?? "…").toUpperCase()}
+              </span>
             </div>
             <h2 className="mono">{chipId}</h2>
             <p>{titleMeta}</p>
@@ -381,8 +432,18 @@ export function ChipInspector({ chipId, onClose }: { chipId: string; onClose?: (
         )}
       </div>
 
-      {chipQuery.isPending && <StateMessage title="Загружаем chip…" detail="Метаданные official TRAIN" />}
-      {chipQuery.isError && <ErrorMessage error={chipQuery.error} onRetry={() => chipQuery.refetch()} />}
+      {chipQuery.isPending && (
+        <StateMessage
+          title="Загружаем chip…"
+          detail="Метаданные official TRAIN"
+        />
+      )}
+      {chipQuery.isError && (
+        <ErrorMessage
+          error={chipQuery.error}
+          onRetry={() => chipQuery.refetch()}
+        />
+      )}
       {chip && chip.kind === "af" && <AfInspector chip={chip} />}
       {chip && chip.kind === "bs" && <BsInspector chip={chip} />}
 
@@ -391,7 +452,35 @@ export function ChipInspector({ chipId, onClose }: { chipId: string; onClose?: (
           <Layers size={14} />
           <span>Assets: {(chip.assets ?? []).join(", ")}</span>
           <Satellite size={14} />
-          <span>GSD {chip.gsd_m ?? "—"} м · EPSG:{chip.epsg ?? "—"}</span>
+          <span>
+            GSD {chip.gsd_m ?? "—"} м · EPSG:{chip.epsg ?? "—"}
+          </span>
+          <Link
+            href="/"
+            className={styles.back}
+            onClick={() => {
+              const state = useWorkspace.getState();
+              state.selectTrainChip(chip.chip_id);
+              state.closePanel();
+              state.setLayer("monitoringChips", true);
+              const coordinates = (
+                chip.geometry?.coordinates as number[][][] | undefined
+              )?.[0];
+              if (coordinates)
+                state.requestCamera({
+                  kind: "bounds",
+                  bbox: [
+                    Math.min(...coordinates.map((p) => p[0])),
+                    Math.min(...coordinates.map((p) => p[1])),
+                    Math.max(...coordinates.map((p) => p[0])),
+                    Math.max(...coordinates.map((p) => p[1])),
+                  ],
+                  maxZoom: 12,
+                });
+            }}
+          >
+            Сцена на карте · GT / Prediction / Errors
+          </Link>
         </div>
       )}
     </Card>

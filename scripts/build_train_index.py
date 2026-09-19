@@ -1,17 +1,16 @@
-#!/usr/bin/env python3
-"""Построить индекс OFFICIAL TRAIN из meta.csv → GeoJSON + JSON для API/карты.
-
-Использует UTM bounds из meta (не восстанавливает test).
-"""
 from __future__ import annotations
 
+import argparse
 import csv
 import io
 import json
 import math
+import os
 import tarfile
 from pathlib import Path
 
+import numpy as np
+import rasterio
 from pyproj import Transformer
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -82,7 +81,7 @@ def row_to_feature(row: dict) -> dict | None:
     x_max, y_max = _num(row["x_max"]), _num(row["y_max"])
     if epsg is None or None in (x_min, y_min, x_max, y_max):
         return None
-    ring = footprint(epsg, x_min, y_min, x_max, y_max)  # type: ignore[arg-type]
+    ring = footprint(epsg, x_min, y_min, x_max, y_max)
     n_fire = _num(row.get("n_fire_px", ""))
     burn_ha = _num(row.get("burn_area_ha", ""))
     sev1 = _num(row.get("sev1_px", ""))
@@ -125,15 +124,72 @@ def row_to_feature(row: dict) -> dict | None:
 
 
 def main() -> int:
-    if not TAR.exists():
-        raise SystemExit(f"missing {TAR}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--train-root",
+        type=Path,
+        default=Path(os.environ.get("KROMA_TRAIN_ROOT") or ROOT / "data/Мониторинг DATA/train"),
+    )
+    parser.add_argument("--tar", type=Path, default=TAR)
+    args = parser.parse_args()
     features: list[dict] = []
-    with tarfile.open(TAR, "r:") as tf:
-        for member in ("train/af/meta.csv", "train/bs/meta.csv"):
-            for row in read_meta(tf, member):
-                feat = row_to_feature(row)
-                if feat:
-                    features.append(feat)
+    if args.train_root.is_dir():
+        for kind in ("af", "bs"):
+            with (args.train_root / kind / "meta.csv").open() as handle:
+                for row in csv.DictReader(handle):
+                    if "_tr_" not in row["chip_id"]:
+                        raise ValueError("Only official TRAIN may be georeferenced")
+                    path = args.train_root / kind / "masks" / f"{row['chip_id']}_MASK.tif"
+                    with rasterio.open(path) as raster:
+                        if not raster.crs or not raster.crs.is_projected:
+                            raise ValueError(f"Projected CRS required: {path.name}")
+                        mask = raster.read(1)
+                        bounds = raster.bounds
+                        row.update(
+                            kind=kind,
+                            epsg=str(raster.crs.to_epsg()),
+                            x_min=str(bounds.left),
+                            y_min=str(bounds.bottom),
+                            x_max=str(bounds.right),
+                            y_max=str(bounds.top),
+                            gsd=str(abs(raster.transform.a)),
+                            width=str(raster.width),
+                            height=str(raster.height),
+                        )
+                        area = (
+                            abs(
+                                raster.transform.a * raster.transform.e
+                                - raster.transform.b * raster.transform.d
+                            )
+                            / 10000
+                        )
+                        if kind == "bs":
+                            row["burn_area_ha"] = str(
+                                round(float(np.isin(mask, (1, 2, 3)).sum()) * area, 4)
+                            )
+                            for k in (1, 2, 3):
+                                row[f"sev{k}_px"] = str(int((mask == k).sum()))
+                        else:
+                            row["n_fire_px"] = str(int((mask == 1).sum()))
+                        feature = row_to_feature(row)
+                        if feature:
+                            feature["properties"]["transform"] = list(raster.transform)[:6]
+                            feature["properties"]["area_ha"] = raster.width * raster.height * area
+                            coords = feature["geometry"]["coordinates"][0]
+                            feature["properties"]["bbox"] = [
+                                min(c[0] for c in coords),
+                                min(c[1] for c in coords),
+                                max(c[0] for c in coords),
+                                max(c[1] for c in coords),
+                            ]
+                            features.append(feature)
+    else:
+        with tarfile.open(args.tar, "r:") as tf:
+            for member in ("train/af/meta.csv", "train/bs/meta.csv"):
+                for row in read_meta(tf, member):
+                    feat = row_to_feature(row)
+                    if feat:
+                        features.append(feat)
     features.sort(key=lambda f: f["id"])
     fc = {
         "type": "FeatureCollection",

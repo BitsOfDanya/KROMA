@@ -21,8 +21,9 @@ class MlUnavailableError(RuntimeError):
 class MlService:
     def __init__(self) -> None:
         self._lock = Lock()
-        self._cache: OrderedDict[tuple[str, str], dict[str, Any]] = OrderedDict()
+        self._cache: OrderedDict[tuple[str, str, str], dict[str, Any]] = OrderedDict()
         self._loaded: dict[str, float] = {}
+        self._device = "auto (resolved on first BS inference)"
 
     def status(self) -> dict[str, Any]:
         state = artifacts.status()
@@ -31,6 +32,9 @@ class MlService:
         bs_keys = artifacts.BS_KEYS
         return {
             "artifacts_root": state["artifacts_root"],
+            "version": state["version"],
+            "device": {"af": "cpu", "bs": self._device},
+            "missing_artifacts": state["missing_artifacts"],
             "af": {
                 "ready": state["af"]["ready"],
                 "path": files["af_model"]["path"],
@@ -44,14 +48,14 @@ class MlService:
                 "model_version": state["bs"]["model_version"],
                 "expected": (
                     "U-Net ensemble v003 → physics/dNBR + LightGBM refiner v004 → "
-                    "component filter → contour refiner v005"
+                    "component filter → red-edge contour refiner v006"
                 ),
             },
             "files": files,
             "provenance": manifest.get("provenance", {}),
             "load_seconds": dict(self._loaded),
             "note": (
-                "Веса не входят в git. Смонтируйте их: python scripts/mount_artifacts.py "
+                "Проверьте комплект артефактов: python scripts/mount_artifacts.py "
                 "или задайте KROMA_ML_ARTIFACTS_PATH."
                 if not (state["af"]["ready"] and state["bs"]["ready"])
                 else "Модели готовы; сервис вызывает тот же пайплайн, что и inference.py."
@@ -62,11 +66,11 @@ class MlService:
         return bool(artifacts.status()[kind]["ready"])
 
     def run(self, kind: Kind, chip_id: str) -> dict[str, Any]:
-        key = (kind, chip_id)
+        key = (kind, chip_id, artifacts.AF_VERSION if kind == "af" else artifacts.BS_VERSION)
         with self._lock:
             if key in self._cache:
                 self._cache.move_to_end(key)
-                return self._cache[key]
+                return {**self._cache[key], "cache_hit": True}
             if not self.ready(kind):
                 missing = [
                     name
@@ -83,12 +87,15 @@ class MlService:
                 result = (
                     service.predict_af(chip_id) if kind == "af" else service.predict_bs(chip_id)
                 )
+                if kind == "bs":
+                    self._device = result.get("device", self._device)
                 self._loaded.setdefault(kind, round(time.perf_counter() - started, 2))
             except FileNotFoundError as error:
                 raise MlUnavailableError(f"input data for {chip_id} not found: {error}") from error
             except Exception as error:
                 logger.exception("ml_inference_failed kind=%s chip=%s", kind, chip_id)
                 raise MlUnavailableError(f"{kind.upper()} inference failed: {error}") from error
+            result["cache_hit"] = False
             self._cache[key] = result
             while len(self._cache) > CACHE_SIZE:
                 self._cache.popitem(last=False)

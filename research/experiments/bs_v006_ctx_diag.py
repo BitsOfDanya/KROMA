@@ -10,7 +10,7 @@ from kroma_ml.bs_crop import load_raw
 from kroma_ml.bs_cv import EVAL_MODES, valid_mask
 from kroma_ml.bs_data import load_meta
 from kroma_ml.bs_physics import spectral_indices
-from kroma_ml.bs_v004 import group_map, load_thresholds, organizer_severity, threshold_map
+from kroma_ml.bs_v004 import group_map, load_thresholds
 from kroma_ml.bs_v005 import EIGHT
 from scipy import ndimage
 
@@ -40,7 +40,6 @@ def main() -> None:
         with np.load(V005_OOF / f"{cid}.npz") as z:
             v5, v5burn = z["label"].astype(np.int64), z["burn"]
         dnbr = spectral_indices(raw.refl)["dnbr"]
-        org = organizer_severity(dnbr, threshold_map(raw.landcover, th))
         lc = group_map(raw.landcover, th)
         valids = {n: valid_mask(raw.scl_pre, raw.scl_post, raw.refl, m) for n, m in EVAL_MODES.items()}
         va = valids["all_valid_mask"]

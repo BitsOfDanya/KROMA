@@ -13,4 +13,6 @@ def test_health_returns_json() -> None:
     response = asyncio.run(request())
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert response.json()["status"] == "ok"
+    assert response.json()["version"] == "v006"
+    assert "missing_artifacts" in response.json()

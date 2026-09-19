@@ -6,4 +6,4 @@
 
 Исследование задачи, аналогов и четырёх AOI находится в [одном отчёте](report.md). Конфигурация и manifest пилотов лежат в `experiments/`; большие результаты остаются в `data/processed/` вне Git.
 
-Конкурсный AF трек также документирован в [этом отчёте](report.md): `experiments/af_unet_experiments.py` запускает отдельную конфигурацию и smoke test, `experiments/af_ensemble.py` проверяет сохранённые карты вероятностей, `experiments/af_group_cv.py` сравнивает модели по трём пространственным фолдам. Локальные `.pt` и `.npz` исключены из Git.
+Конкурсный AF трек также документирован в [этом отчёте](report.md): `experiments/af_unet_experiments.py` запускает отдельную конфигурацию и smoke test, `experiments/af_ensemble.py` проверяет сохранённые карты вероятностей, `experiments/af_group_cv.py` сравнивает модели по трём пространственным фолдам. Промежуточные `.pt` и `.npz` исключены из Git; финальный production bundle включён в `ml/artifacts` и проверяется manifest.

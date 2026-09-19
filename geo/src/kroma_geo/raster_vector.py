@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import lru_cache
 
 import numpy as np
 from pyproj import Transformer
@@ -68,8 +69,13 @@ def mask_polygon(binary: np.ndarray, georef: ChipGeoreference) -> BaseGeometry |
     )
 
 
+@lru_cache(maxsize=32)
+def wgs84_transformer(epsg: int) -> Transformer:
+    return Transformer.from_crs(epsg, 4326, always_xy=True)
+
+
 def to_wgs84(geometry: BaseGeometry, epsg: int) -> BaseGeometry:
-    transformer = Transformer.from_crs(epsg, 4326, always_xy=True)
+    transformer = wgs84_transformer(epsg)
     return shapely_transform(transformer.transform, geometry)
 
 
@@ -98,9 +104,12 @@ def class_features(
                 {
                     "type": "Feature",
                     "id": f"{scene_id}-C{class_id}-{index:03d}",
-                    "geometry": mapping(to_wgs84(shown, georef.epsg)),
+                    "geometry": mapping(
+                        to_wgs84(shown.segmentize(min(georef.gsd_x, georef.gsd_y)), georef.epsg)
+                    ),
                     "properties": {
                         "id": f"{scene_id}-C{class_id}-{index:03d}",
+                        "contour_id": f"{scene_id}-C{class_id}-{index:03d}",
                         "scene_id": scene_id,
                         "class_id": class_id,
                         "severity": severity,
@@ -128,7 +137,7 @@ def point_features(
     if len(rows) > limit:
         keep = np.linspace(0, len(rows) - 1, limit).astype(int)
         rows, cols = rows[keep], cols[keep]
-    transformer = Transformer.from_crs(georef.epsg, 4326, always_xy=True)
+    transformer = wgs84_transformer(georef.epsg)
     xs = georef.x_min + (cols + 0.5) * georef.gsd_x
     ys = georef.y_max - (rows + 0.5) * georef.gsd_y
     lons, lats = transformer.transform(xs, ys)

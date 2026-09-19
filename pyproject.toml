@@ -16,3 +16,5 @@ select = ["E", "F", "I", "UP"]
 "ml/src/kroma_ml/bs_v005_stages.py" = ["E501"]
 "scripts/mount_artifacts.py" = ["E402"]
 "scripts/build_train_prepared_dataset.py" = ["E402"]
+
+"research/experiments/*.py" = ["E501"]

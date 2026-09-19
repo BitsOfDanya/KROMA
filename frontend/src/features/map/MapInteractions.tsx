@@ -1,22 +1,52 @@
 "use client";
 
-import type { GeoJSONSource, MapGeoJSONFeature, MapMouseEvent } from "maplibre-gl";
+import type {
+  GeoJSONSource,
+  MapGeoJSONFeature,
+  MapMouseEvent,
+} from "maplibre-gl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { IconButton } from "@/components/ui/IconButton";
-import { formatArea, formatDistance, formatExact, formatInteger, formatRelative, pluralize } from "@/lib/format";
+import {
+  formatArea,
+  formatDistance,
+  formatExact,
+  formatInteger,
+  formatRelative,
+  pluralize,
+} from "@/lib/format";
 import { pathLengthKm } from "@/lib/geo";
 import { SEVERITY_LABEL, STATUS_LABEL, RISK_KIND_LABEL } from "@/lib/labels";
-import type { IncidentStatus, Position, RiskObjectKind, Severity } from "@/lib/api/types";
+import type {
+  IncidentStatus,
+  Position,
+  RiskObjectKind,
+  Severity,
+} from "@/lib/api/types";
 import { useWorkspace } from "@/state/workspace";
 
 import { BURN_SCAR_FILL_LAYER } from "./layers/burnScars";
-import { CHIPS_INTERACTIVE_LAYERS } from "./layers/chips";
-import { HOTSPOT_CLUSTER_LAYER, HOTSPOT_POINT_LAYER, HOTSPOTS_SOURCE, INCIDENT_OBSERVATION_LAYER } from "./layers/hotspots";
-import { INCIDENT_CLUSTER_LAYER, INCIDENT_INTERACTIVE_LAYERS, INCIDENTS_SOURCE } from "./layers/incidents";
+import {
+  CHIPS_CLUSTER_LAYER,
+  CHIPS_POINTS_SOURCE,
+  CHIPS_SOURCE,
+  CHIPS_INTERACTIVE_LAYERS,
+} from "./layers/chips";
+import {
+  HOTSPOT_CLUSTER_LAYER,
+  HOTSPOT_POINT_LAYER,
+  HOTSPOTS_SOURCE,
+  INCIDENT_OBSERVATION_LAYER,
+} from "./layers/hotspots";
+import {
+  INCIDENT_CLUSTER_LAYER,
+  INCIDENT_INTERACTIVE_LAYERS,
+  INCIDENTS_SOURCE,
+} from "./layers/incidents";
 import { MEASURE_SOURCE } from "./layers/measure";
 import { RISK_INTERACTIVE_LAYERS } from "./layers/riskObjects";
 import { THERMAL_LAYER } from "./layers/thermal";
@@ -33,6 +63,7 @@ const INTERACTIVE = [
   ...RISK_INTERACTIVE_LAYERS,
   BURN_SCAR_FILL_LAYER,
   ...CHIPS_INTERACTIVE_LAYERS,
+  CHIPS_CLUSTER_LAYER,
 ];
 
 interface HoverState {
@@ -47,6 +78,16 @@ interface HoverState {
 function HoverContent({ state }: { state: HoverState }) {
   const p = state.properties;
   const layer = state.layer;
+  if (layer === CHIPS_CLUSTER_LAYER)
+    return (
+      <>
+        <strong>OFFICIAL TRAIN</strong>
+        <p>
+          AF {String(p.af_count)} · BS {String(p.bs_count)}
+        </p>
+        <p>Нажмите для приближения</p>
+      </>
+    );
   if (INCIDENT_INTERACTIVE_LAYERS.includes(layer)) {
     const isLive = p.detection_count !== undefined;
     return (
@@ -96,7 +137,13 @@ function HoverContent({ state }: { state: HoverState }) {
           <dt>Пиксель</dt>
           <dd>{String(p.pixel_size_m)} м</dd>
           <dt>Достоверность</dt>
-          <dd>{p.confidence === "h" ? "высокая" : p.confidence === "n" ? "номинальная" : "низкая"}</dd>
+          <dd>
+            {p.confidence === "h"
+              ? "высокая"
+              : p.confidence === "n"
+                ? "номинальная"
+                : "низкая"}
+          </dd>
           <dt>Связь</dt>
           <dd>
             {p.classification === "incident"
@@ -136,11 +183,18 @@ function HoverContent({ state }: { state: HoverState }) {
           <dd>{p.assessment === "final" ? "итоговая" : "предварительная"}</dd>
         </dl>
         {state.pinned && (
-          <Link className={styles.hoverAction} href={`/analytics?scar=${encodeURIComponent(String(p.id))}`}>
+          <Link
+            className={styles.hoverAction}
+            href={`/analytics?scar=${encodeURIComponent(String(p.id))}`}
+          >
             Сравнение до / после <ArrowUpRight size={13} />
           </Link>
         )}
-        {!state.pinned && <div style={{ marginTop: 6, color: "var(--text-tertiary)" }}>Нажмите, чтобы открыть</div>}
+        {!state.pinned && (
+          <div style={{ marginTop: 6, color: "var(--text-tertiary)" }}>
+            Нажмите, чтобы открыть
+          </div>
+        )}
       </>
     );
   }
@@ -165,11 +219,17 @@ function HoverContent({ state }: { state: HoverState }) {
               <dt>Событие</dt>
               <dd>{String(p.fire_event_id ?? "—")}</dd>
               <dt>Burn</dt>
-              <dd>{p.burn_area_ha != null ? `${Number(p.burn_area_ha).toFixed(1)} га` : "—"}</dd>
+              <dd>
+                {p.burn_area_ha != null
+                  ? `${Number(p.burn_area_ha).toFixed(1)} га`
+                  : "—"}
+              </dd>
             </>
           )}
         </dl>
-        <div style={{ marginTop: 6, color: "var(--text-tertiary)" }}>Клик → Dataset Inspector</div>
+        <div style={{ marginTop: 6, color: "var(--text-tertiary)" }}>
+          Клик → Dataset Inspector
+        </div>
       </>
     );
   }
@@ -180,7 +240,11 @@ function HoverContent({ state }: { state: HoverState }) {
         <div>
           {RISK_KIND_LABEL[p.kind as RiskObjectKind]} · {String(p.subtitle)}
         </div>
-        {p.population ? <div style={{ marginTop: 4 }}>{pluralize(Number(p.population), ["житель", "жителя", "жителей"])}</div> : null}
+        {p.population ? (
+          <div style={{ marginTop: 4 }}>
+            {pluralize(Number(p.population), ["житель", "жителя", "жителей"])}
+          </div>
+        ) : null}
       </>
     );
   }
@@ -210,10 +274,21 @@ export function MapInteractions() {
     const features: GeoJSON.Feature[] = points.map((point, index) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: point },
-      properties: index === points.length - 1 && index > 0 ? { label: formatDistance(pathLengthKm(points)) } : {},
+      properties:
+        index === points.length - 1 && index > 0
+          ? { label: formatDistance(pathLengthKm(points)) }
+          : {},
     }));
-    if (points.length > 1) features.push({ type: "Feature", geometry: { type: "LineString", coordinates: points }, properties: {} });
-    layers.setData(map, MEASURE_SOURCE, { type: "FeatureCollection", features });
+    if (points.length > 1)
+      features.push({
+        type: "Feature",
+        geometry: { type: "LineString", coordinates: points },
+        properties: {},
+      });
+    layers.setData(map, MEASURE_SOURCE, {
+      type: "FeatureCollection",
+      features,
+    });
   }, [map, layers, points]);
 
   useEffect(() => {
@@ -223,15 +298,32 @@ export function MapInteractions() {
 
     const setIncidentHover = (next: { source: string; id: string } | null) => {
       const previous = hoveredIncident.current;
-      if (previous && (!next || previous.id !== next.id || previous.source !== next.source)) {
-        if (map.getSource(previous.source)) map.setFeatureState({ source: previous.source, id: previous.id }, { hover: false });
+      if (
+        previous &&
+        (!next || previous.id !== next.id || previous.source !== next.source)
+      ) {
+        if (map.getSource(previous.source))
+          map.setFeatureState(
+            { source: previous.source, id: previous.id },
+            { hover: false },
+          );
       }
-      if (next && map.getSource(next.source)) map.setFeatureState({ source: next.source, id: next.id }, { hover: true });
+      if (next && map.getSource(next.source))
+        map.setFeatureState(
+          { source: next.source, id: next.id },
+          { hover: true },
+        );
       hoveredIncident.current = next;
     };
 
-    const topFeature = (point: MapMouseEvent["point"]): MapGeoJSONFeature | undefined => {
-      const available = INTERACTIVE.filter((id) => map.getLayer(id) && map.getLayoutProperty(id, "visibility") !== "none");
+    const topFeature = (
+      point: MapMouseEvent["point"],
+    ): MapGeoJSONFeature | undefined => {
+      const available = INTERACTIVE.filter(
+        (id) =>
+          map.getLayer(id) &&
+          map.getLayoutProperty(id, "visibility") !== "none",
+      );
       if (available.length === 0) return undefined;
       return map.queryRenderedFeatures(point, { layers: available })[0];
     };
@@ -242,11 +334,21 @@ export function MapInteractions() {
         if (measuringRef.current) return;
         const feature = topFeature(event.point);
         canvas.style.cursor = feature ? "pointer" : "";
-        const isIncident = feature && INCIDENT_INTERACTIVE_LAYERS.includes(feature.layer.id);
-        setIncidentHover(isIncident ? { source: feature.source, id: String(feature.properties.id) } : null);
+        const isIncident =
+          feature && INCIDENT_INTERACTIVE_LAYERS.includes(feature.layer.id);
+        setIncidentHover(
+          isIncident
+            ? { source: feature.source, id: String(feature.properties.id) }
+            : null,
+        );
         setHover((current) => {
           if (current?.pinned) return current;
-          if (!feature || feature.layer.id === INCIDENT_CLUSTER_LAYER || feature.layer.id === HOTSPOT_CLUSTER_LAYER) return null;
+          if (
+            !feature ||
+            feature.layer.id === INCIDENT_CLUSTER_LAYER ||
+            feature.layer.id === HOTSPOT_CLUSTER_LAYER
+          )
+            return null;
           return {
             x: event.point.x,
             y: event.point.y,
@@ -267,7 +369,10 @@ export function MapInteractions() {
 
     const onClick = async (event: MapMouseEvent) => {
       if (measuringRef.current) {
-        setPoints((current) => [...current, [event.lngLat.lng, event.lngLat.lat]]);
+        setPoints((current) => [
+          ...current,
+          [event.lngLat.lng, event.lngLat.lat],
+        ]);
         return;
       }
       const feature = topFeature(event.point);
@@ -276,15 +381,34 @@ export function MapInteractions() {
         return;
       }
       const layerId = feature.layer.id;
-      if (layerId === INCIDENT_CLUSTER_LAYER || layerId === HOTSPOT_CLUSTER_LAYER) {
-        const sourceId = layerId === INCIDENT_CLUSTER_LAYER ? INCIDENTS_SOURCE : HOTSPOTS_SOURCE;
+      if (
+        layerId === INCIDENT_CLUSTER_LAYER ||
+        layerId === HOTSPOT_CLUSTER_LAYER ||
+        layerId === CHIPS_CLUSTER_LAYER
+      ) {
+        const sourceId =
+          layerId === CHIPS_CLUSTER_LAYER
+            ? CHIPS_POINTS_SOURCE
+            : layerId === INCIDENT_CLUSTER_LAYER
+              ? INCIDENTS_SOURCE
+              : HOTSPOTS_SOURCE;
         const clusterId = feature.properties.cluster_id;
         const geometry = feature.geometry as GeoJSON.Point;
         if (typeof clusterId === "number") {
-          const zoom = await (map.getSource(sourceId) as GeoJSONSource).getClusterExpansionZoom(clusterId);
-          map.easeTo({ center: geometry.coordinates as [number, number], zoom: Math.min(zoom + 0.3, 12), duration: 700 });
+          const zoom = await (
+            map.getSource(sourceId) as GeoJSONSource
+          ).getClusterExpansionZoom(clusterId);
+          map.easeTo({
+            center: geometry.coordinates as [number, number],
+            zoom: Math.min(zoom + 0.3, 12),
+            duration: 700,
+          });
         } else {
-          map.easeTo({ center: geometry.coordinates as [number, number], zoom: map.getZoom() + 2, duration: 700 });
+          map.easeTo({
+            center: geometry.coordinates as [number, number],
+            zoom: map.getZoom() + 2,
+            duration: 700,
+          });
         }
         return;
       }
@@ -306,14 +430,25 @@ export function MapInteractions() {
         return;
       }
       if (CHIPS_INTERACTIVE_LAYERS.includes(layerId)) {
-        const chipId = String(feature.properties.chip_id || feature.properties.id || "");
+        const chipId = String(
+          feature.properties.chip_id || feature.properties.id || "",
+        );
         if (chipId) {
+          map.removeFeatureState({ source: CHIPS_SOURCE });
+          map.setFeatureState(
+            { source: CHIPS_SOURCE, id: chipId },
+            { selected: true },
+          );
           router.push(`/explorer?chip=${encodeURIComponent(chipId)}`);
         }
         setHover(null);
         return;
       }
-      if (layerId === BURN_SCAR_FILL_LAYER || layerId === THERMAL_LAYER || RISK_INTERACTIVE_LAYERS.includes(layerId)) {
+      if (
+        layerId === BURN_SCAR_FILL_LAYER ||
+        layerId === THERMAL_LAYER ||
+        RISK_INTERACTIVE_LAYERS.includes(layerId)
+      ) {
         setHover({
           x: event.point.x,
           y: event.point.y,
@@ -347,7 +482,12 @@ export function MapInteractions() {
   return (
     <>
       {hover && (
-        <div className={styles.hoverCard} style={{ left: hover.x, top: hover.y }} data-pinned={hover.pinned} role="tooltip">
+        <div
+          className={styles.hoverCard}
+          style={{ left: hover.x, top: hover.y }}
+          data-pinned={hover.pinned}
+          role="tooltip"
+        >
           {hover.pinned && (
             <IconButton
               label="Закрыть"
@@ -371,11 +511,22 @@ export function MapInteractions() {
             </span>
           )}
           {points.length > 0 && (
-            <button type="button" className="mono" style={{ color: "var(--text-secondary)" }} onClick={() => setPoints([])}>
+            <button
+              type="button"
+              className="mono"
+              style={{ color: "var(--text-secondary)" }}
+              onClick={() => setPoints([])}
+            >
               Сброс
             </button>
           )}
-          <IconButton label="Завершить измерение" size="sm" showTooltip={false} icon={<X size={14} />} onClick={() => setMeasuringAndClear(false)} />
+          <IconButton
+            label="Завершить измерение"
+            size="sm"
+            showTooltip={false}
+            icon={<X size={14} />}
+            onClick={() => setMeasuringAndClear(false)}
+          />
         </div>
       )}
     </>

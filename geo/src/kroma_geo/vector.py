@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from functools import lru_cache
 from typing import Any
 
 from pyproj import CRS, Transformer
-from shapely import box, make_valid
+from shapely import STRtree, box, make_valid
 from shapely.geometry import Polygon, mapping, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import transform, unary_union
@@ -49,7 +50,7 @@ def validate_geometry(value: GeoJSON | BaseGeometry, *, repair: bool = False) ->
 
 
 def canonical_geojson(value: GeoJSON | BaseGeometry) -> GeoJSON:
-    geometry = _geometry(value)
+    geometry = value if isinstance(value, BaseGeometry) else shape(value)
     if geometry.geom_type == "GeometryCollection":
         geometry = unary_union(
             [part for part in geometry.geoms if part.geom_type in {"Polygon", "MultiPolygon"}]
@@ -74,12 +75,17 @@ def clip_to_bbox(value: GeoJSON | BaseGeometry, bbox: BBox) -> GeoJSON | None:
     return canonical_geojson(clipped)
 
 
+@lru_cache(maxsize=32)
+def crs_transformer(source_crs: str, target_crs: str) -> Transformer:
+    return Transformer.from_crs(
+        CRS.from_user_input(source_crs), CRS.from_user_input(target_crs), always_xy=True
+    )
+
+
 def reproject_geometry(
     value: GeoJSON | BaseGeometry, source_crs: str, target_crs: str
 ) -> BaseGeometry:
-    transformer = Transformer.from_crs(
-        CRS.from_user_input(source_crs), CRS.from_user_input(target_crs), always_xy=True
-    )
+    transformer = crs_transformer(source_crs, target_crs)
     return transform(transformer.transform, _geometry(value))
 
 
@@ -104,7 +110,7 @@ def intersection_area_ha(
     intersection = _geometry(left).intersection(_geometry(right))
     if intersection.is_empty or intersection.area <= 0:
         return 0.0
-    projected = reproject_geometry(intersection, source_crs, area_crs)
+    projected = reproject_geometry(canonical_geojson(intersection), source_crs, area_crs)
     return projected.area / 10_000
 
 
@@ -120,8 +126,12 @@ def assert_non_overlapping(
     area_crs: str = "EPSG:6933",
 ) -> None:
     values = [validate_geometry(value) for value in geometries]
+    tree = STRtree(values)
     for index, left in enumerate(values):
-        for right in values[index + 1 :]:
+        for other in tree.query(left):
+            if other <= index:
+                continue
+            right = values[other]
             if (
                 intersection_area_ha(left, right, source_crs=source_crs, area_crs=area_crs)
                 > tolerance_ha

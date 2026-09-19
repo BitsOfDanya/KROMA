@@ -2,7 +2,11 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
-import { AttributionControl, Map as MapLibreMap, ScaleControl } from "maplibre-gl";
+import {
+  AttributionControl,
+  Map as MapLibreMap,
+  ScaleControl,
+} from "maplibre-gl";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { INITIAL_VIEW } from "@/config/map";
@@ -18,7 +22,6 @@ import { INCIDENT_PULSE_LAYER } from "./layers/incidents";
 import { MapContext } from "./MapContext";
 import styles from "./map.module.css";
 import { readPalette } from "./palette";
-
 
 export interface MapView {
   center: [number, number];
@@ -41,7 +44,11 @@ function webglAvailable() {
   }
 }
 
-export function KromaMap({ initialView, onViewChange, children }: KromaMapProps) {
+export function KromaMap({
+  initialView,
+  onViewChange,
+  children,
+}: KromaMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [styleVersion, setStyleVersion] = useState(0);
@@ -60,14 +67,20 @@ export function KromaMap({ initialView, onViewChange, children }: KromaMapProps)
     const container = containerRef.current;
     if (!container) return;
     if (!webglAvailable()) {
-      queueMicrotask(() => setFailure("Браузер не поддерживает WebGL — карта недоступна."));
+      queueMicrotask(() =>
+        setFailure("Браузер не поддерживает WebGL — карта недоступна."),
+      );
       return;
     }
     const start = initialViewRef.current ?? INITIAL_VIEW;
     const state = useWorkspace.getState();
     const instance = new MapLibreMap({
       container,
-      style: buildBasemapStyle(state.basemap, document.documentElement.dataset.theme === "light" ? "light" : "dark", readPalette()),
+      style: buildBasemapStyle(
+        state.basemap,
+        document.documentElement.dataset.theme === "light" ? "light" : "dark",
+        readPalette(),
+      ),
       center: start.center,
       zoom: start.zoom,
       minZoom: 1.4,
@@ -80,22 +93,34 @@ export function KromaMap({ initialView, onViewChange, children }: KromaMapProps)
     });
     instance.touchZoomRotate.disableRotation();
     instance.keyboard.disableRotation();
-    instance.addControl(new AttributionControl({ compact: true }), "bottom-right");
-    instance.addControl(new ScaleControl({ maxWidth: 96, unit: "metric" }), "bottom-right");
+    instance.addControl(
+      new AttributionControl({ compact: true }),
+      "bottom-right",
+    );
+    instance.addControl(
+      new ScaleControl({ maxWidth: 96, unit: "metric" }),
+      "bottom-right",
+    );
 
     let tileErrors = 0;
     instance.on("error", (event) => {
       const message = String(event.error?.message ?? "");
       if (/tile|Failed to fetch|NetworkError|AJAXError/i.test(message)) {
         tileErrors += 1;
-        if (tileErrors === 25 && !instance.loaded()) setFailure("Картографические тайлы недоступны. Проверьте сеть или провайдера в конфигурации.");
+        if (tileErrors === 25 && !instance.loaded())
+          setFailure(
+            "Картографические тайлы недоступны. Проверьте сеть или провайдера в конфигурации.",
+          );
       }
     });
 
     const onStyleLoad = () => {
       const current = useWorkspace.getState();
       registerMapImages(instance);
-      layers.install(instance, readPalette(), { layers: current.layers, evidenceMode: current.evidenceMode });
+      layers.install(instance, readPalette(), {
+        layers: current.layers,
+        evidenceMode: current.evidenceMode,
+      });
       setStyleVersion((version) => version + 1);
     };
     instance.on("style.load", onStyleLoad);
@@ -103,7 +128,10 @@ export function KromaMap({ initialView, onViewChange, children }: KromaMapProps)
 
     instance.on("moveend", () => {
       const center = instance.getCenter();
-      viewCallback.current?.({ center: [center.lng, center.lat], zoom: instance.getZoom() });
+      viewCallback.current?.({
+        center: [center.lng, center.lat],
+        zoom: instance.getZoom(),
+      });
     });
 
     let frame = 0;
@@ -115,8 +143,16 @@ export function KromaMap({ initialView, onViewChange, children }: KromaMapProps)
       if (!instance.getLayer(INCIDENT_PULSE_LAYER)) return;
       const phase = (time % 2600) / 2600;
       const eased = 1 - (1 - phase) ** 2;
-      instance.setPaintProperty(INCIDENT_PULSE_LAYER, "circle-radius", 11 + eased * 16);
-      instance.setPaintProperty(INCIDENT_PULSE_LAYER, "circle-stroke-opacity", 0.55 * (1 - phase));
+      instance.setPaintProperty(
+        INCIDENT_PULSE_LAYER,
+        "circle-radius",
+        11 + eased * 16,
+      );
+      instance.setPaintProperty(
+        INCIDENT_PULSE_LAYER,
+        "circle-stroke-opacity",
+        0.55 * (1 - phase),
+      );
     };
     frame = requestAnimationFrame(pulse);
 
@@ -133,14 +169,25 @@ export function KromaMap({ initialView, onViewChange, children }: KromaMapProps)
   useEffect(() => {
     if (!map || appliedStyle.current === styleKey) return;
     appliedStyle.current = styleKey;
-    map.setStyle(buildBasemapStyle(basemap, theme, readPalette()), { diff: false });
+    map.setStyle(buildBasemapStyle(basemap, theme, readPalette()), {
+      diff: false,
+    });
   }, [map, styleKey, basemap, theme]);
 
   useEffect(() => {
     if (!map) return;
-    return useWorkspace.subscribe((state, previous) => {
-      if (state.layers !== previous.layers || state.evidenceMode !== previous.evidenceMode) {
-        layers.applyVisibility(map, { layers: state.layers, evidenceMode: state.evidenceMode });
+    const sync = (
+      state: ReturnType<typeof useWorkspace.getState>,
+      previous: ReturnType<typeof useWorkspace.getState>,
+    ) => {
+      if (
+        state.layers !== previous.layers ||
+        state.evidenceMode !== previous.evidenceMode
+      ) {
+        layers.applyVisibility(map, {
+          layers: state.layers,
+          evidenceMode: state.evidenceMode,
+        });
       }
       if (state.camera && state.camera !== previous.camera) {
         const request = state.camera;
@@ -151,21 +198,43 @@ export function KromaMap({ initialView, onViewChange, children }: KromaMapProps)
               [request.bbox[0], request.bbox[1]],
               [request.bbox[2], request.bbox[3]],
             ],
-            { padding, maxZoom: request.maxZoom ?? 11, duration: 1600, essential: true },
+            {
+              padding,
+              maxZoom: request.maxZoom ?? 11,
+              duration: 1600,
+              essential: true,
+            },
           );
         } else {
-          map.flyTo({ center: request.center, zoom: request.zoom, padding, duration: 1500, essential: true });
+          map.flyTo({
+            center: request.center,
+            zoom: request.zoom,
+            padding,
+            duration: 1500,
+            essential: true,
+          });
         }
       }
-    });
+    };
+    const state = useWorkspace.getState();
+    sync(state, { ...state, camera: null });
+    return useWorkspace.subscribe(sync);
   }, [map, layers]);
 
-  const contextValue = useMemo(() => ({ map, styleVersion, layers }), [map, styleVersion, layers]);
+  const contextValue = useMemo(
+    () => ({ map, styleVersion, layers }),
+    [map, styleVersion, layers],
+  );
 
   return (
     <MapContext.Provider value={contextValue}>
       <div className={styles.mapRoot}>
-        <div ref={containerRef} className={styles.canvas} role="region" aria-label="Оперативная карта" />
+        <div
+          ref={containerRef}
+          className={styles.canvas}
+          role="region"
+          aria-label="Оперативная карта"
+        />
         {failure && (
           <div className={styles.mapFailure} role="alert">
             <strong>Карта недоступна</strong>

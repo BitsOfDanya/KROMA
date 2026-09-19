@@ -1,4 +1,5 @@
 import argparse
+import json
 from pathlib import Path
 
 import numpy as np
@@ -68,6 +69,7 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     for cid, logits in v003_logits(args.chip_ids, args.root, args.with_mask).items():
         np.save(args.out_dir / f"{cid}.npy", logits)
+    (args.out_dir / "runtime.json").write_text(json.dumps({"device": str(DEVICE)}))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,16 @@
+fastapi==0.141.1
+joblib==1.6.0
+lightgbm==4.7.0
+numpy==2.5.3
+pandas==3.0.6
+pillow==11.3.0
+pydantic==2.13.5
+pyproj==3.8.0
+pyshp==2.4.2
+rasterio==1.5.1
+scikit-learn==1.9.1
+scipy==1.18.1
+shapely==2.1.2
+tifffile==2025.12.20
+torch==2.14.0
+uvicorn==0.53.0

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import time
+from functools import lru_cache
 from typing import Any, Literal
 
 import numpy as np
@@ -12,7 +13,7 @@ from PIL import Image
 from app.services.ml_service import MlUnavailableError, get_ml_service
 from app.services.train_dataset import get_train_dataset_service
 
-Layer = Literal["pred", "gt", "error"]
+Layer = Literal["pred", "gt", "error", "probability"]
 SEVERITY = {1: "low", 2: "moderate", 3: "high"}
 SOURCE_PRED = "official_train_in_sample_prediction"
 SOURCE_GT = "official_train_ground_truth"
@@ -91,6 +92,25 @@ def _run(kind: str, chip_id: str) -> dict[str, Any]:
 
 def prediction_payload(kind: str, chip_id: str) -> dict[str, Any]:
     started = time.perf_counter()
+    state = get_ml_service().status()
+    if not state[kind]["ready"]:
+        raise HTTPException(status_code=503, detail="Required model artifacts are missing")
+    before = _prediction_payload.cache_info().hits
+    payload = _prediction_payload(kind, chip_id, state[kind]["model_version"])
+    hit = _prediction_payload.cache_info().hits > before
+    return {
+        **payload,
+        "cache_hit": hit,
+        "runtime_ms": {
+            **payload["runtime_ms"],
+            "total": round((time.perf_counter() - started) * 1000, 1),
+        },
+    }
+
+
+@lru_cache(maxsize=12)
+def _prediction_payload(kind: str, chip_id: str, version: str) -> dict[str, Any]:
+    started = time.perf_counter()
     chip, georef = _chip(chip_id)
     if chip["kind"] != kind:
         raise HTTPException(status_code=422, detail=f"{chip_id} is a {chip['kind'].upper()} chip")
@@ -98,12 +118,15 @@ def prediction_payload(kind: str, chip_id: str) -> dict[str, Any]:
     ml_ms = result["runtime_ms"]["total"] if kind == "bs" else result["runtime_ms"]
     t_geo = time.perf_counter()
     mask, gt, valid = result["mask"], result["gt_mask"], result["valid"]
+    valid = valid & (gt != 255)
     payload: dict[str, Any] = {
         "chip_id": chip_id,
         "kind": kind,
         "status": "ok",
         "detail": None,
         "model_version": result["model_version"],
+        "device": result.get("device"),
+        "cache_hit": result.get("cache_hit", False),
         "prediction": SCOPE,
         "georeferenced": georef is not None,
         "gsd_m": georef.gsd_x if georef else chip.get("gsd_m"),
@@ -151,7 +174,19 @@ def prediction_payload(kind: str, chip_id: str) -> dict[str, Any]:
                 scene_id=chip_id,
                 model_version=result["model_version"],
                 source=SOURCE_PRED,
-                simplify_m=georef.gsd_x / 2,
+                simplify_m=0,
+            )
+            if georef
+            else []
+        )
+        payload["burn_perimeter"] = (
+            class_features(
+                (mask > 0).astype(np.uint8),
+                georef,
+                classes={1: "burn"},
+                scene_id=chip_id,
+                model_version=result["model_version"],
+                source=SOURCE_PRED,
             )
             if georef
             else []
@@ -164,7 +199,7 @@ def prediction_payload(kind: str, chip_id: str) -> dict[str, Any]:
                 scene_id=chip_id,
                 model_version="official_train_gt",
                 source=SOURCE_GT,
-                simplify_m=georef.gsd_x / 2,
+                simplify_m=0,
             )
             if georef
             else []
@@ -185,11 +220,21 @@ def overlay_png(kind: str, chip_id: str, layer: Layer, size: int = 512) -> bytes
     chip, _ = _chip(chip_id)
     if chip["kind"] != kind:
         raise HTTPException(status_code=422, detail=f"{chip_id} is a {chip['kind'].upper()} chip")
+    if layer == "gt":
+        return get_train_dataset_service().preview_png(chip_id, "mask", size)
     result = _run(kind, chip_id)
     mask = result["mask"].astype(np.int64)
     gt = np.where(result["gt_mask"] == 255, 0, result["gt_mask"]).astype(np.int64)
+    valid = result["valid"] & (result["gt_mask"] != 255)
     rgba = np.zeros((*mask.shape, 4), dtype=np.uint8)
-    if layer == "error":
+    if layer == "probability":
+        probability = result["burn_probability"] if kind == "bs" else result["probability"]
+        intensity = (np.clip(probability, 0, 1) * 255).astype(np.uint8)
+        rgba[..., 0] = intensity
+        rgba[..., 1] = intensity
+        rgba[..., 2] = intensity
+        rgba[..., 3] = 255
+    elif layer == "error":
         pred_b, truth_b = mask > 0, gt > 0
         if kind == "af":
             rgba[pred_b & truth_b] = COLORS["tp"]
@@ -204,6 +249,7 @@ def overlay_png(kind: str, chip_id: str, layer: Layer, size: int = 512) -> bytes
         else:
             for k, name in SEVERITY.items():
                 rgba[source == k] = COLORS[name]
+    rgba[~valid] = 0
     image = Image.fromarray(rgba, mode="RGBA").resize((size, size), Image.Resampling.NEAREST)
     out = io.BytesIO()
     image.save(out, format="PNG")
@@ -211,9 +257,38 @@ def overlay_png(kind: str, chip_id: str, layer: Layer, size: int = 512) -> bytes
 
 
 def feature_collection(kind: str, chip_id: str, layer: Literal["pred", "gt"]) -> dict[str, Any]:
+    if layer == "gt":
+        import tifffile
+
+        chip, georef = _chip(chip_id)
+        if chip["kind"] != kind:
+            raise HTTPException(status_code=422, detail="Chip kind mismatch")
+        gt = tifffile.imread(io.BytesIO(get_train_dataset_service().read_bytes(chip_id, "mask")))
+        metadata = {"scene_id": chip_id, "model_version": "official_train_gt", "source": SOURCE_GT}
+        features = []
+        if georef:
+            features = (
+                point_features(gt == 1, georef, **metadata, limit=gt.size)
+                if kind == "af"
+                else class_features(gt, georef, classes=SEVERITY, **metadata)
+            )
+        return {"type": "FeatureCollection", "features": features, "properties": metadata}
     payload = prediction_payload(kind, chip_id)
     if kind == "af":
-        features = payload["thermopoints"] if layer == "pred" else []
+        _, georef = _chip(chip_id)
+        result = _run(kind, chip_id)
+        features = (
+            point_features(
+                result["mask"] if layer == "pred" else (result["gt_mask"] == 1),
+                georef,
+                scene_id=chip_id,
+                model_version=payload["model_version"] if layer == "pred" else "official_train_gt",
+                source=SOURCE_PRED if layer == "pred" else SOURCE_GT,
+                limit=result["mask"].size,
+            )
+            if georef
+            else []
+        )
     else:
         features = payload["polygons"] if layer == "pred" else payload["ground_truth_polygons"]
     return {
@@ -228,3 +303,41 @@ def feature_collection(kind: str, chip_id: str, layer: Literal["pred", "gt"]) ->
             "area_ha": payload.get("area_ha"),
         },
     }
+
+
+def raster_package(chip_id: str) -> bytes:
+    chip, _ = _chip(chip_id)
+    result = _run(chip["kind"], chip_id)
+    output = io.BytesIO()
+    np.savez_compressed(
+        output,
+        **{key: value for key, value in result.items() if isinstance(value, np.ndarray)},
+        model_version=result["model_version"],
+    )
+    return output.getvalue()
+
+
+def validation_geometry(chip_id: str, layer: str) -> dict[str, Any]:
+    chip, georef = _chip(chip_id)
+    if georef is None:
+        raise HTTPException(status_code=422, detail="TRAIN georeference unavailable")
+    if layer in ("gt", "pred"):
+        return feature_collection(chip["kind"], chip_id, layer)
+    result = _run(chip["kind"], chip_id)
+    pred, gt = result["mask"], result["gt_mask"]
+    errors = np.zeros(pred.shape, np.uint8)
+    errors[(pred > 0) & (gt == 0)] = 1
+    errors[(pred == 0) & (gt > 0)] = 2
+    errors[(pred > 0) & (gt > 0) & (pred != gt)] = 3
+    if chip["kind"] == "af":
+        errors[(pred == 1) & (gt == 1)] = 4
+    errors[~result["valid"] | (gt == 255)] = 0
+    features = class_features(
+        errors,
+        georef,
+        classes={1: "fp", 2: "fn", 3: "mismatch", 4: "tp"},
+        scene_id=chip_id,
+        model_version=result["model_version"],
+        source=SOURCE_PRED,
+    )
+    return {"type": "FeatureCollection", "features": features}

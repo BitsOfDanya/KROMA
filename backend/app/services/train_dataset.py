@@ -1,5 +1,3 @@
-"""Official TRAIN dataset access — footprints, metadata, raster previews from tar."""
-
 from __future__ import annotations
 
 import csv
@@ -26,6 +24,11 @@ Asset = Literal[
     "s2_post",
     "s1_pre",
     "s1_post",
+    "i4",
+    "i5",
+    "thermal_difference",
+    "dnbr",
+    "landcover",
 ]
 
 ASSET_PATHS: dict[str, dict[Asset, str]] = {
@@ -56,7 +59,7 @@ class TrainDatasetService:
 
     @property
     def directory_present(self) -> bool:
-        return bool(self.train_dir and (self.train_dir / "af").is_dir())
+        return bool(self.train_dir and any((self.train_dir / k).is_dir() for k in ("af", "bs")))
 
     @property
     def source(self) -> str | None:
@@ -65,9 +68,18 @@ class TrainDatasetService:
         return "tar" if self.tar_path.is_file() else None
 
     def georef(self, chip_id: str) -> ChipGeoreference | None:
-        """UTM raster origin from the official meta.csv (authoritative for prediction geometry)."""
         if self._georef is None:
             self._georef = {}
+            for chip in self._chips.values():
+                affine = chip.get("transform")
+                if affine and chip.get("epsg"):
+                    self._georef[chip["chip_id"]] = ChipGeoreference(
+                        epsg=chip["epsg"],
+                        x_min=affine[2],
+                        y_max=affine[5],
+                        gsd_x=abs(affine[0]),
+                        gsd_y=abs(affine[4]),
+                    )
             for kind in ("af", "bs"):
                 path = self.train_dir / kind / "meta.csv" if self.train_dir else None
                 if not path or not path.is_file():
@@ -75,6 +87,8 @@ class TrainDatasetService:
                 with path.open(newline="", encoding="utf-8") as handle:
                     for row in csv.DictReader(handle):
                         try:
+                            if row["chip_id"] in self._georef:
+                                continue
                             gsd = float(row["gsd"])
                             self._georef[row["chip_id"]] = ChipGeoreference(
                                 epsg=int(float(row["epsg"])),
@@ -142,7 +156,6 @@ class TrainDatasetService:
         items.sort(key=lambda c: c["chip_id"])
         total = len(items)
         page = items[offset : offset + limit]
-        # strip heavy geometry for list if huge — keep footprint for map sync
         return {"total": total, "offset": offset, "limit": limit, "items": page}
 
     def get_chip(self, chip_id: str) -> dict[str, Any]:
@@ -185,7 +198,7 @@ class TrainDatasetService:
     def read_bytes(self, chip_id: str, asset: Asset) -> bytes:
         member = self._member_for(chip_id, asset)
         if self.directory_present:
-            path = self.train_dir.parent / member  # templates are "train/<kind>/..."
+            path = self.train_dir / Path(member).relative_to("train")
             if not path.is_file():
                 raise HTTPException(status_code=404, detail=f"Missing {member}")
             return path.read_bytes()
@@ -203,29 +216,58 @@ class TrainDatasetService:
     def preview_png(self, chip_id: str, asset: Asset, size: int = 512) -> bytes:
         import tifffile
 
-        blob = self.read_bytes(chip_id, asset)
+        source_asset = {
+            "i4": "viirs",
+            "i5": "viirs",
+            "thermal_difference": "viirs",
+            "dnbr": "s2_post",
+            "landcover": "aux",
+        }.get(asset, asset)
+        blob = self.read_bytes(chip_id, source_asset)
         arr = tifffile.imread(io.BytesIO(blob))
-        img = _array_to_preview(arr, asset)
-        resampling = (
-            Image.Resampling.NEAREST if asset == "mask" else Image.Resampling.BILINEAR
-        )
+        if asset in ("i4", "i5", "thermal_difference", "dnbr", "landcover"):
+            data = np.moveaxis(arr, 0, -1) if arr.shape[0] <= 16 else arr
+            if asset in ("i4", "i5", "thermal_difference"):
+                arr = data[..., 3] if asset == "i4" else data[..., 4]
+                if asset == "thermal_difference":
+                    arr = data[..., 3].astype(np.float32) - data[..., 4].astype(np.float32)
+            elif asset == "landcover":
+                arr = data[..., 2] if self._chips[chip_id]["kind"] == "bs" else data[..., 0]
+            else:
+                from kroma_ml.bs_data import S2_BANDS
+
+                pre = tifffile.imread(io.BytesIO(self.read_bytes(chip_id, "s2_pre")))
+                pre = np.moveaxis(pre, 0, -1) if pre.shape[0] <= 16 else pre
+                nir, swir = S2_BANDS.index("B8A"), S2_BANDS.index("B12")
+
+                def nbr(image):
+                    a, b = image[..., nir].astype(np.float32), image[..., swir].astype(np.float32)
+                    return (a - b) / (a + b + 1e-6)
+
+                arr = nbr(pre) - nbr(data)
+        img = _array_to_preview(arr, asset, self._chips[chip_id]["kind"])
+        resampling = Image.Resampling.NEAREST if asset == "mask" else Image.Resampling.BILINEAR
         img = img.resize((size, size), resampling)
         out = io.BytesIO()
         img.save(out, format="PNG")
         return out.getvalue()
 
 
-def _array_to_preview(arr: np.ndarray, asset: Asset) -> Image.Image:
+def _array_to_preview(arr: np.ndarray, asset: Asset, kind: str = "bs") -> Image.Image:
     if arr.ndim == 2:
         if asset == "mask":
-            return _colorize_mask(arr)
+            return _colorize_mask(arr, kind == "af")
         plane = arr.astype(np.float32)
         return Image.fromarray(_stretch(plane), mode="L").convert("RGB")
-    # multi-band
     data = np.moveaxis(arr, 0, -1) if arr.shape[0] < arr.shape[-1] and arr.shape[0] <= 12 else arr
     if data.ndim == 3 and data.shape[-1] >= 3:
-        # prefer reflective-looking bands; for VIIRS take first 3
-        rgb = np.stack([_stretch(data[..., i].astype(np.float32)) for i in (0, 1, 2)], axis=-1)
+        rgb = np.stack(
+            [
+                _stretch(data[..., i].astype(np.float32))
+                for i in ((2, 1, 0) if asset in ("s2_pre", "s2_post") else (0, 1, 2))
+            ],
+            axis=-1,
+        )
         return Image.fromarray(rgb, mode="RGB")
     if data.ndim == 3:
         plane = data[..., 0].astype(np.float32)
@@ -241,21 +283,17 @@ def _stretch(plane: np.ndarray) -> np.ndarray:
     if hi <= lo:
         hi = lo + 1
     scaled = np.clip((plane - lo) / (hi - lo), 0, 1)
+    scaled = np.where(np.isfinite(plane), scaled, 0)
     return (scaled * 255).astype(np.uint8)
 
 
-def _colorize_mask(mask: np.ndarray) -> Image.Image:
-    """AF: 0/1. BS severity: 0/1/2/3 → transparent / low / mod / high."""
+def _colorize_mask(mask: np.ndarray, active_fire: bool = False) -> Image.Image:
     h, w = mask.shape
     rgba = np.zeros((h, w, 4), dtype=np.uint8)
-    # low
     rgba[mask == 1] = (232, 176, 88, 200)
-    # moderate
     rgba[mask == 2] = (232, 120, 64, 220)
-    # high / AF fire
     rgba[mask == 3] = (220, 56, 48, 235)
-    # AF binary fire as high
-    if set(np.unique(mask)).issubset({0, 1}):
+    if active_fire:
         rgba[mask == 1] = (220, 56, 48, 220)
     return Image.fromarray(rgba, mode="RGBA")
 

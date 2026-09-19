@@ -48,3 +48,12 @@ def test_invalid_self_intersection_is_rejected() -> None:
     bow = {"type": "Polygon", "coordinates": [[(0, 0), (2, 2), (0, 2), (2, 0), (0, 0)]]}
     with pytest.raises(GeometryError, match="invalid"):
         validate_geometry(bow)
+
+
+def test_polygon_collection_intersection_area() -> None:
+    from kroma_geo.vector import intersection_area_ha
+    from shapely.geometry import MultiPolygon, box
+
+    left = MultiPolygon([box(0, 0, 2, 2), box(3, 0, 4, 1)])
+    right = MultiPolygon([box(1, 1, 2, 3), box(4, 0, 5, 1)])
+    assert intersection_area_ha(left, right, source_crs="EPSG:6933") == 0.0001

@@ -466,8 +466,7 @@ export function ExplorerView() {
                   <strong>ML weights</strong>
                   <span className={styles.meta}>ml/artifacts</span>
                   <p>
-                    Адаптер `ml_service` готов. Пока веса не смонтированы — inspector показывает GT и before/after;
-                    prediction/IoU появятся после mount.
+                    GOLD v006 подключён через единый адаптер. Inspector показывает GT, before/after, prediction и ошибки; при отсутствии весов выводится причина недоступности.
                   </p>
                 </div>
               </li>
