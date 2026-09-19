@@ -203,6 +203,104 @@
   flex-wrap: wrap;
 }
 
+.trainPanel {
+  margin-top: 18px;
+}
+
+.trainFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  align-items: flex-end;
+}
+
+.modeToggle {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.modeToggle button {
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.modeToggle button[data-active="true"] {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.searchField {
+  flex: 1;
+  min-width: 180px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-sunken);
+  color: var(--text-tertiary);
+}
+
+.searchBox input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.mlStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+  font-size: 12px;
+}
+
+.mlStrip span {
+  font-weight: 650;
+  color: var(--text-tertiary);
+}
+
+.mlStrip span[data-ready="true"] {
+  color: #7ec8a0;
+}
+
+.mlStrip span[data-ready="false"] {
+  color: #e8b058;
+}
+
+.mlStrip em {
+  font-style: normal;
+  color: var(--text-tertiary);
+}
+
+.trainList {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 @media (max-width: 900px) {
   .grid,
   .footerCard {

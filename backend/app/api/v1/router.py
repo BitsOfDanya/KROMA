@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import analysis, analytics, burn_scars, incidents, live, map, overview
+from app.api.v1 import analysis, analytics, burn_scars, datasets, incidents, live, map, overview
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(overview.router)
@@ -10,3 +10,4 @@ router.include_router(map.router)
 router.include_router(analytics.router)
 router.include_router(live.router)
 router.include_router(analysis.router)
+router.include_router(datasets.router)

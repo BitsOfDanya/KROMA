@@ -14,10 +14,15 @@ import type {
   IncidentStatus,
   IncidentTimeline,
   LiveStatus,
+  MlStatus,
   ObservationHistogram,
   Overview,
   RiskObjectKind,
   TimelineResponse,
+  TrainAsset,
+  TrainChip,
+  TrainChipKind,
+  TrainChipList,
 } from "./types";
 
 export interface IncidentQuery {
@@ -136,5 +141,20 @@ export const api = {
       apiGet<FeatureCollection>("/api/v1/map/wind", { bbox: bboxParam(bbox) }, signal),
     clouds: (bbox?: BBox | null, signal?: AbortSignal) =>
       apiGet<FeatureCollection>("/api/v1/map/clouds", { bbox: bboxParam(bbox) }, signal),
+  },
+
+  datasets: {
+    train: (
+      params: { kind?: TrainChipKind; has_fire?: boolean; q?: string; limit?: number; offset?: number } = {},
+      signal?: AbortSignal,
+    ) => apiGet<TrainChipList>("/api/v1/datasets/train", params, signal),
+    chip: (chipId: string, signal?: AbortSignal) =>
+      apiGet<TrainChip>(`/api/v1/datasets/train/${encodeURIComponent(chipId)}`, {}, signal),
+    previewUrl: (chipId: string, asset: TrainAsset, size = 512) =>
+      `${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/api/v1/datasets/train/${encodeURIComponent(chipId)}/preview/${asset}?size=${size}`,
+  },
+
+  ml: {
+    status: (signal?: AbortSignal) => apiGet<MlStatus>("/api/v1/ml/status", {}, signal),
   },
 };

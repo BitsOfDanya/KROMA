@@ -1,24 +1,51 @@
 "use client";
 
-import { Database, ExternalLink, Flame, Layers, MapPinned, Satellite, Wind } from "lucide-react";
+import {
+  Database,
+  ExternalLink,
+  Flame,
+  Layers,
+  MapPinned,
+  Search,
+  Satellite,
+  Wind,
+} from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ErrorMessage, StateMessage } from "@/components/ui/StateMessage";
-import { useAnalysisDatasets, useOverview } from "@/lib/api/queries";
 import { exampleDraft, querySearch } from "@/features/analysis/query";
+import { useAnalysisDatasets, useMlStatus, useOverview, useTrainChips } from "@/lib/api/queries";
+import type { TrainChip, TrainChipKind } from "@/lib/api/types";
 import { useWorkspace, type LayerId } from "@/state/workspace";
 
+import { ChipInspector } from "./ChipInspector";
 import styles from "./explorer.module.css";
 
-const LAYER_PRESETS: { id: string; label: string; hint: string; layers: Partial<Record<LayerId, boolean>>; basemap?: "map" | "satellite" | "terrain"; profile?: "ops" | "fireWeather"; region?: string }[] = [
+const LAYER_PRESETS: {
+  id: string;
+  label: string;
+  hint: string;
+  layers: Partial<Record<LayerId, boolean>>;
+  basemap?: "map" | "satellite" | "terrain";
+  profile?: "ops" | "fireWeather";
+  region?: string;
+}[] = [
   {
     id: "aoi",
     label: "Территория мониторинга",
     hint: "АОИ Нижнее Поволжье и Подонье · зоны UTM",
     layers: { monitoringAoi: true, incidents: true, rawDetections: false },
+    region: "aoi",
+  },
+  {
+    id: "train",
+    label: "Official TRAIN footprints",
+    hint: "AF / BS чипы на карте · клик → Dataset Inspector",
+    layers: { monitoringChips: true, monitoringAoi: true, incidents: false, burnScars: false },
     region: "aoi",
   },
   {
@@ -62,10 +89,52 @@ const ORIGIN = {
   synthetic_demo: "Синтетический пример",
 } as const;
 
+function chipHref(chipId: string) {
+  return `/explorer?chip=${encodeURIComponent(chipId)}`;
+}
+
+function TrainChipRow({ chip }: { chip: TrainChip }) {
+  return (
+    <li>
+      <div>
+        <strong className="mono">{chip.chip_id}</strong>
+        <span className={styles.meta}>
+          {chip.kind === "af"
+            ? `${chip.satellite ?? "VIIRS"} · ${chip.acq_datetime?.slice(0, 10) ?? "—"} · ${chip.has_fire ? "has fire" : "no fire"} · ${chip.n_fire_px ?? 0} px`
+            : `${chip.fire_event_id ?? "—"} · ${chip.date_pre ?? "?"} → ${chip.date_post ?? "?"} · ${chip.burn_area_ha ?? "—"} га`}
+        </span>
+        <p>
+          OFFICIAL TRAIN · EPSG:{chip.epsg ?? "—"} · GSD {chip.gsd_m ?? "—"} м
+          {chip.cloud_frac != null ? ` · cloud ${(chip.cloud_frac * 100).toFixed(1)}%` : ""}
+        </p>
+      </div>
+      <Link className={styles.ghostLink} href={chipHref(chip.chip_id)}>
+        Inspector
+      </Link>
+    </li>
+  );
+}
+
 export function ExplorerView() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedChip = searchParams.get("chip");
+
   const catalog = useAnalysisDatasets();
   const overview = useOverview();
+  const ml = useMlStatus();
   const [regionId, setRegionId] = useState<string>("");
+  const [trainKind, setTrainKind] = useState<TrainChipKind>("bs");
+  const [hasFire, setHasFire] = useState<"all" | "yes" | "no">("all");
+  const [query, setQuery] = useState("");
+
+  const train = useTrainChips({
+    kind: trainKind,
+    has_fire: trainKind === "af" ? (hasFire === "all" ? undefined : hasFire === "yes") : undefined,
+    q: query.trim() || undefined,
+    limit: 80,
+  });
+
   const setMapProfile = useWorkspace((state) => state.setMapProfile);
   const setBasemap = useWorkspace((state) => state.setBasemap);
   const setLayer = useWorkspace((state) => state.setLayer);
@@ -112,12 +181,26 @@ export function ExplorerView() {
     return `/analytics?${params.toString()}`;
   }, [datasets]);
 
+  if (selectedChip) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <PageHeader
+            title="Dataset Inspector"
+            description="Official TRAIN chip · competition test на карту не выводится."
+          />
+          <ChipInspector chipId={selectedChip} onClose={() => router.push("/explorer")} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
         <PageHeader
           title="Данные и слои"
-          description="Выберите источник, территорию и набор слоёв. Competition test без геопривязки сюда не подключены."
+          description="Official TRAIN, prepared demo и реальные геопривязанные сцены. Competition test без геопривязки не показывается."
           actions={
             <Link className={styles.primaryLink} href={analysisHref}>
               <MapPinned size={15} />
@@ -126,13 +209,110 @@ export function ExplorerView() {
           }
         />
 
+        <Card className={styles.panel + " " + styles.trainPanel}>
+          <div className={styles.panelHead}>
+            <Database size={16} />
+            <div>
+              <h2>OFFICIAL TRAIN DATASET</h2>
+              <p>
+                {train.data
+                  ? `${train.data.counts.af} AF · ${train.data.counts.bs} BS · footprints на карте`
+                  : "Индекс train-чипов из GeoTIFF transform → WGS84"}
+              </p>
+            </div>
+          </div>
+
+          <div className={styles.trainFilters}>
+            <div className={styles.modeToggle} role="tablist" aria-label="AF / BS">
+              {(["af", "bs"] as const).map((kind) => (
+                <button
+                  key={kind}
+                  type="button"
+                  role="tab"
+                  aria-selected={trainKind === kind}
+                  data-active={trainKind === kind}
+                  onClick={() => setTrainKind(kind)}
+                >
+                  {kind.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            {trainKind === "af" && (
+              <label className={styles.field}>
+                Fire
+                <select
+                  value={hasFire}
+                  onChange={(event) => setHasFire(event.target.value as typeof hasFire)}
+                  aria-label="Has fire"
+                >
+                  <option value="all">Все</option>
+                  <option value="yes">Has fire</option>
+                  <option value="no">No fire</option>
+                </select>
+              </label>
+            )}
+
+            <label className={styles.field + " " + styles.searchField}>
+              Поиск
+              <span className={styles.searchBox}>
+                <Search size={14} />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="chip_id / event / satellite"
+                  aria-label="Поиск chip"
+                />
+              </span>
+            </label>
+
+            <button
+              type="button"
+              className={styles.ghostLink}
+              onClick={() => {
+                applyPreset("train");
+                router.push("/");
+              }}
+            >
+              <MapPinned size={14} />
+              Footprints на карте
+            </button>
+          </div>
+
+          {(ml.data || ml.isPending) && (
+            <div className={styles.mlStrip}>
+              <span data-ready={ml.data?.af.ready ?? false}>AF {ml.data?.af.ready ? "ready" : "GT only"}</span>
+              <span data-ready={ml.data?.bs.ready ?? false}>BS {ml.data?.bs.ready ? "ready" : "GT only"}</span>
+              <em>{ml.data?.note ?? "Проверяем ml/artifacts…"}</em>
+            </div>
+          )}
+
+          {train.isPending && <p className={styles.muted}>Загружаем индекс TRAIN…</p>}
+          {train.isError && <ErrorMessage error={train.error} onRetry={() => train.refetch()} />}
+          {train.data && train.data.items.length === 0 && (
+            <StateMessage title="Нет чипов" detail="Смените фильтр или пересоберите train_chips_index." />
+          )}
+          {train.data && train.data.items.length > 0 && (
+            <>
+              <p className={styles.muted}>
+                Показано {train.data.items.length} из {train.data.total}
+              </p>
+              <ul className={styles.list + " " + styles.trainList}>
+                {train.data.items.map((chip) => (
+                  <TrainChipRow key={chip.chip_id} chip={chip} />
+                ))}
+              </ul>
+            </>
+          )}
+        </Card>
+
         <div className={styles.grid}>
           <Card className={styles.panel}>
             <div className={styles.panelHead}>
               <MapPinned size={16} />
               <div>
                 <h2>Территория мониторинга</h2>
-                <p>Из датасета Мониторинг DATA · не ML-чипы</p>
+                <p>АОИ · DEMO REAL/PREPARED · не competition test</p>
               </div>
             </div>
             <ul className={styles.list}>
@@ -142,7 +322,7 @@ export function ExplorerView() {
                   <span className={styles.meta}>~435 тыс. км² · EPSG:4326 · сезоны 2019–2025 · месяцы 04–10</span>
                   <p>
                     Ростовская, Волгоградская, Астраханская обл., запад и центр Саратовской обл., Республика Калмыкия.
-                    На карте — граница АОИ, полосы UTM и footprints train-чипов (слой «Чипы датасета»).
+                    На карте — граница АОИ, полосы UTM и footprints train-чипов.
                   </p>
                 </div>
                 <div className={styles.stackActions}>
@@ -177,7 +357,7 @@ export function ExplorerView() {
               <Database size={16} />
               <div>
                 <h2>Подготовленные наборы</h2>
-                <p>Только геопривязанные train / demo / real dataset</p>
+                <p>DEMO / REAL / PREPARED · только геопривязанные</p>
               </div>
             </div>
             {catalog.isPending && <p className={styles.muted}>Загружаем каталог…</p>}
@@ -240,7 +420,7 @@ export function ExplorerView() {
               {LAYER_PRESETS.map((preset) => (
                 <button key={preset.id} type="button" className={styles.preset} onClick={() => applyPreset(preset.id)}>
                   <span className={styles.presetIcon}>
-                    {preset.id === "aoi" ? (
+                    {preset.id === "aoi" || preset.id === "train" ? (
                       <MapPinned size={16} />
                     ) : preset.id === "weather" ? (
                       <Wind size={16} />
@@ -266,18 +446,28 @@ export function ExplorerView() {
             <div className={styles.panelHead}>
               <Satellite size={16} />
               <div>
-                <h2>Что не подключено</h2>
-                <p>Честная граница сервиса</p>
+                <h2>Граница сервиса</h2>
+                <p>Что намеренно не подключено</p>
               </div>
             </div>
             <ul className={styles.list}>
               <li>
                 <div>
-                  <strong>fire-train / fire-test tar</strong>
-                  <span className={styles.meta}>ML-чипы AF/BS · Sentinel-1/2 · без live NRT</span>
+                  <strong>Competition TEST</strong>
+                  <span className={styles.meta}>Анонимизирован · без координат</span>
                   <p>
-                    Архивы с Яндекс.Диска — для обучения и инференса. На оперативную карту не выкладываются, пока нет
-                    геопривязанного prepared-набора.
+                    Не геопривязываем, не восстанавливаем координаты, не показываем на карте. Только official TRAIN +
+                    prepared/demo сцены.
+                  </p>
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>ML weights</strong>
+                  <span className={styles.meta}>ml/artifacts</span>
+                  <p>
+                    Адаптер `ml_service` готов. Пока веса не смонтированы — inspector показывает GT и before/after;
+                    prediction/IoU появятся после mount.
                   </p>
                 </div>
               </li>
@@ -288,13 +478,21 @@ export function ExplorerView() {
         <Card className={styles.footerCard}>
           <div>
             <h2>Обязательный сценарий</h2>
-            <p>Территория → период → данные → результат: термоточки, контуры, severity, площадь, экспорт GeoJSON/CSV/JSON и REST.</p>
+            <p>
+              Территория → период → данные → результат: термоточки, контуры, severity, площадь, экспорт GeoJSON/CSV/JSON
+              и REST.
+            </p>
           </div>
           <div className={styles.footerActions}>
             <Link className={styles.primaryLink} href={analysisHref}>
               Запустить анализ
             </Link>
-            <a className={styles.ghostLink} href={`${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/docs`} target="_blank" rel="noreferrer">
+            <a
+              className={styles.ghostLink}
+              href={`${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/docs`}
+              target="_blank"
+              rel="noreferrer"
+            >
               <ExternalLink size={14} />
               Swagger API
             </a>

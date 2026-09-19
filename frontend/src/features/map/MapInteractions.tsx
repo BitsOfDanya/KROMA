@@ -2,6 +2,7 @@
 
 import type { GeoJSONSource, MapGeoJSONFeature, MapMouseEvent } from "maplibre-gl";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowUpRight, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -13,6 +14,7 @@ import type { IncidentStatus, Position, RiskObjectKind, Severity } from "@/lib/a
 import { useWorkspace } from "@/state/workspace";
 
 import { BURN_SCAR_FILL_LAYER } from "./layers/burnScars";
+import { CHIPS_INTERACTIVE_LAYERS } from "./layers/chips";
 import { HOTSPOT_CLUSTER_LAYER, HOTSPOT_POINT_LAYER, HOTSPOTS_SOURCE, INCIDENT_OBSERVATION_LAYER } from "./layers/hotspots";
 import { INCIDENT_CLUSTER_LAYER, INCIDENT_INTERACTIVE_LAYERS, INCIDENTS_SOURCE } from "./layers/incidents";
 import { MEASURE_SOURCE } from "./layers/measure";
@@ -30,6 +32,7 @@ const INTERACTIVE = [
   THERMAL_LAYER,
   ...RISK_INTERACTIVE_LAYERS,
   BURN_SCAR_FILL_LAYER,
+  ...CHIPS_INTERACTIVE_LAYERS,
 ];
 
 interface HoverState {
@@ -141,6 +144,35 @@ function HoverContent({ state }: { state: HoverState }) {
       </>
     );
   }
+  if (CHIPS_INTERACTIVE_LAYERS.includes(layer)) {
+    const kind = String(p.kind);
+    return (
+      <>
+        <div className={styles.hoverTitle}>
+          <span className="mono">{String(p.chip_id)}</span>
+          <span>{kind.toUpperCase()} · OFFICIAL TRAIN</span>
+        </div>
+        <dl className={styles.hoverRows}>
+          {kind === "af" ? (
+            <>
+              <dt>Спутник</dt>
+              <dd>{String(p.satellite ?? "—")}</dd>
+              <dt>Fire px</dt>
+              <dd>{String(p.n_fire_px ?? "—")}</dd>
+            </>
+          ) : (
+            <>
+              <dt>Событие</dt>
+              <dd>{String(p.fire_event_id ?? "—")}</dd>
+              <dt>Burn</dt>
+              <dd>{p.burn_area_ha != null ? `${Number(p.burn_area_ha).toFixed(1)} га` : "—"}</dd>
+            </>
+          )}
+        </dl>
+        <div style={{ marginTop: 6, color: "var(--text-tertiary)" }}>Клик → Dataset Inspector</div>
+      </>
+    );
+  }
   if (RISK_INTERACTIVE_LAYERS.includes(layer)) {
     return (
       <>
@@ -156,6 +188,7 @@ function HoverContent({ state }: { state: HoverState }) {
 }
 
 export function MapInteractions() {
+  const router = useRouter();
   const { map, layers } = useMapContext();
   const [hover, setHover] = useState<HoverState | null>(null);
   const hoveredIncident = useRef<{ source: string; id: string } | null>(null);
@@ -272,6 +305,14 @@ export function MapInteractions() {
         setHover(null);
         return;
       }
+      if (CHIPS_INTERACTIVE_LAYERS.includes(layerId)) {
+        const chipId = String(feature.properties.chip_id || feature.properties.id || "");
+        if (chipId) {
+          router.push(`/explorer?chip=${encodeURIComponent(chipId)}`);
+        }
+        setHover(null);
+        return;
+      }
       if (layerId === BURN_SCAR_FILL_LAYER || layerId === THERMAL_LAYER || RISK_INTERACTIVE_LAYERS.includes(layerId)) {
         setHover({
           x: event.point.x,
@@ -293,7 +334,7 @@ export function MapInteractions() {
       map.off("mouseout", onLeave);
       map.off("click", onClick);
     };
-  }, [map]);
+  }, [map, router]);
 
   useEffect(() => {
     if (!map) return;

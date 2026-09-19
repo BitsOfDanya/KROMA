@@ -3,7 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { api, type IncidentQuery } from "./endpoints";
-import type { BBox } from "./types";
+import type { BBox, TrainChipKind } from "./types";
 
 const MINUTE = 60_000;
 
@@ -25,6 +25,10 @@ export const queryKeys = {
   liveHotspots: (bbox: BBox | null) => ["live", "hotspots", bbox] as const,
   liveIncidents: (bbox: BBox | null) => ["live", "incidents", bbox] as const,
   analysisDatasets: ["analysis", "datasets"] as const,
+  trainChips: (params: { kind?: TrainChipKind; has_fire?: boolean; q?: string }) =>
+    ["datasets", "train", params] as const,
+  trainChip: (id: string) => ["datasets", "train", "chip", id] as const,
+  mlStatus: ["ml", "status"] as const,
 };
 
 export function useAnalysisDatasets() {
@@ -32,6 +36,31 @@ export function useAnalysisDatasets() {
     queryKey: queryKeys.analysisDatasets,
     queryFn: ({ signal }) => api.analysis.datasets(signal),
     staleTime: Number.POSITIVE_INFINITY,
+  });
+}
+
+export function useTrainChips(params: { kind?: TrainChipKind; has_fire?: boolean; q?: string; limit?: number } = {}) {
+  return useQuery({
+    queryKey: queryKeys.trainChips(params),
+    queryFn: ({ signal }) => api.datasets.train({ ...params, limit: params.limit ?? 200 }, signal),
+    staleTime: 5 * MINUTE,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useTrainChip(chipId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.trainChip(chipId ?? ""),
+    queryFn: ({ signal }) => api.datasets.chip(chipId as string, signal),
+    enabled: Boolean(chipId),
+  });
+}
+
+export function useMlStatus() {
+  return useQuery({
+    queryKey: queryKeys.mlStatus,
+    queryFn: ({ signal }) => api.ml.status(signal),
+    staleTime: MINUTE,
   });
 }
 

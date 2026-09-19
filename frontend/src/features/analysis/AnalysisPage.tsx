@@ -13,6 +13,7 @@ import { useAnalysisDatasets } from "@/lib/api/queries";
 import type { AnalysisQuery, AnalysisResult, BBox } from "@/lib/api/types";
 
 import { AnalysisMap } from "./AnalysisMap";
+import { AnalysisProgress } from "./AnalysisProgress";
 import { AnalysisReport } from "./AnalysisReport";
 import styles from "./analysis.module.css";
 import {
@@ -212,7 +213,7 @@ function AnalysisPageState({ applied }: { applied: AnalysisQuery | null }) {
                   <p className={styles.temporalNote}>Гари отбираются по дате послепожарной съёмки; это не дата начала пожара.</p>
                   <button className={styles.runButton} type="submit" disabled={analysis.isFetching || !effectiveDraft.datasetId}>
                     {analysis.isFetching ? <RotateCw size={16} className={styles.spin} /> : <Calculator size={16} />}
-                    {analysis.isFetching ? "Рассчитываем…" : "Рассчитать"}
+                    {analysis.isFetching ? "Анализ…" : "Запустить анализ"}
                   </button>
                 </>
               )}
@@ -228,11 +229,14 @@ function AnalysisPageState({ applied }: { applied: AnalysisQuery | null }) {
             {analysis.isPlaceholderData && (
               <div className={styles.changedNotice} role="status">Новый расчёт выполняется; ниже временно оставлен предыдущий result_id.</div>
             )}
+            {(analysis.isFetching || analysis.data) && (
+              <AnalysisProgress fetching={analysis.isFetching} done={Boolean(analysis.data) && !analysis.isFetching} />
+            )}
             {analysis.isError && <ErrorMessage error={analysis.error} onRetry={() => analysis.refetch()} retrying={analysis.isFetching} />}
             {!applied && !analysis.data && (
               <StateMessage
                 title="Задайте область и период"
-                detail="Используйте готовый пример или измените координаты, затем нажмите «Рассчитать»."
+                detail="Выберите prepared dataset / scene или bbox и период, затем нажмите «Запустить анализ»."
               />
             )}
             <AnalysisMap result={analysis.data ?? null} draftBBox={draftBBox(effectiveDraft)} onDraftBBox={setBBox} />

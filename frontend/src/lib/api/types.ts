@@ -292,6 +292,78 @@ export interface LiveStatus {
 export type AnalysisOrigin = "model_output" | "reference" | "synthetic_demo";
 export type CoverageStatus = "full" | "partial" | "none";
 
+export type TrainChipKind = "af" | "bs";
+export type TrainAsset = "mask" | "viirs" | "aux" | "s2_pre" | "s2_post" | "s1_pre" | "s1_post";
+
+export interface TrainChip {
+  id: string;
+  chip_id: string;
+  kind: TrainChipKind;
+  task: TrainChipKind;
+  split: string;
+  origin: string;
+  fire_event_id: string | null;
+  epsg: number | null;
+  gsd_m: number | null;
+  width: number | null;
+  height: number | null;
+  acq_datetime: string | null;
+  satellite: string | null;
+  date_pre: string | null;
+  date_post: string | null;
+  s1_date_pre: string | null;
+  s1_date_post: string | null;
+  valid_frac: number | null;
+  cloud_frac: number | null;
+  n_fire_px: number | null;
+  has_fire: boolean | null;
+  burn_area_ha: number | null;
+  sev1_px: number | null;
+  sev2_px: number | null;
+  sev3_px: number | null;
+  source: string;
+  geometry?: { type: "Polygon" | "MultiPolygon"; coordinates: unknown };
+  assets?: TrainAsset[];
+  inspector?: {
+    modes: string[];
+    prediction_available: boolean;
+    prediction_note: string;
+  };
+}
+
+export interface TrainChipList {
+  dataset: string;
+  label: string;
+  origin: string;
+  available: boolean;
+  tar_present: boolean;
+  index_present: boolean;
+  counts: { total: number; af: number; bs: number };
+  note: string;
+  total: number;
+  offset: number;
+  limit: number;
+  items: TrainChip[];
+}
+
+export interface MlStatus {
+  artifacts_root: string;
+  af: {
+    ready: boolean;
+    path: string;
+    model_version: string | null;
+    expected: string;
+  };
+  bs: {
+    ready: boolean;
+    paths: Record<string, string>;
+    present: Record<string, boolean>;
+    model_version: string | null;
+    expected: string;
+  };
+  note: string;
+}
+
 export interface AnalysisQuery {
   datasetId: string;
   datasetVersion: string;

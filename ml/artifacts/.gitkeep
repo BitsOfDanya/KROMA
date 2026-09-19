@@ -1,0 +1,4 @@
+# ML artifacts (weights not in git — mount for inference)
+ml/artifacts/
+!ml/artifacts/.gitkeep
+!ml/artifacts/**/.gitkeep

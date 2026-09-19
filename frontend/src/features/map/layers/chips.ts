@@ -2,6 +2,9 @@ import { FONT_REGULAR } from "../basemap";
 import { emptyCollection, type LayerModule } from "./types";
 
 export const CHIPS_SOURCE = "k-chips";
+export const CHIPS_FILL_LAYER = `${CHIPS_SOURCE}-fill`;
+export const CHIPS_LINE_LAYER = `${CHIPS_SOURCE}-line`;
+export const CHIPS_INTERACTIVE_LAYERS = [CHIPS_FILL_LAYER, CHIPS_LINE_LAYER];
 
 export const chipsModule: LayerModule = {
   sources: {
