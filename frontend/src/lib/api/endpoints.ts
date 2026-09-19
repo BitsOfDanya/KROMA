@@ -1,4 +1,4 @@
-import { apiDownload, apiGet } from "./client";
+import { apiDownload, apiGet, apiPostForm } from "./client";
 import type {
   AnalysisDatasetCatalog,
   AnalysisQuery,
@@ -23,6 +23,7 @@ import type {
   TrainChip,
   TrainChipKind,
   TrainChipList,
+  UploadPredictResult,
 } from "./types";
 
 export interface IncidentQuery {
@@ -156,5 +157,11 @@ export const api = {
 
   ml: {
     status: (signal?: AbortSignal) => apiGet<MlStatus>("/api/v1/ml/status", {}, signal),
+    upload: (task: TrainChipKind, file: File, signal?: AbortSignal) => {
+      const form = new FormData();
+      form.set("task", task);
+      form.set("file", file);
+      return apiPostForm<UploadPredictResult>("/api/v1/inference/upload", form, signal);
+    },
   },
 };

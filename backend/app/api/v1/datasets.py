@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, File, Form, Query, Response, UploadFile
 from pydantic import BaseModel, Field
 
 from app.services.ml_service import get_ml_service
@@ -77,3 +77,12 @@ def inference_bs(body: MlPredictBody) -> dict:
         "status": result.status,
         "detail": result.detail,
     }
+
+
+@router.post("/inference/upload")
+async def inference_upload(
+    task: Literal["af", "bs"] = Form("af"),
+    file: UploadFile = File(...),
+) -> dict:
+    data = await file.read()
+    return get_ml_service().predict_upload(task, file.filename or "upload.bin", data)

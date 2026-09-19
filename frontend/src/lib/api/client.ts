@@ -67,6 +67,27 @@ export async function apiGet<T>(path: string, params: Record<string, QueryValue>
   return (await response.json()) as T;
 }
 
+export async function apiPostForm<T>(path: string, form: FormData, signal?: AbortSignal): Promise<T> {
+  const url = `${API_BASE}${path}`;
+  let response: Response;
+  try {
+    response = await fetch(url, { method: "POST", body: form, signal, headers: { Accept: "application/json" } });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    throw new ApiError("API недоступен", 0, path);
+  }
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      detail = errorDetail(await response.json(), detail);
+    } catch {
+      detail = response.statusText;
+    }
+    throw new ApiError(detail || `HTTP ${response.status}`, response.status, path);
+  }
+  return (await response.json()) as T;
+}
+
 export interface DownloadedFile {
   blob: Blob;
   filename: string;

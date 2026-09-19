@@ -59,6 +59,9 @@ export function UserMenu() {
           <a href="/about" className={styles.menuItem} onClick={close}>
             О проекте
           </a>
+          <a href="/research" className={styles.menuItem} onClick={close}>
+            Research
+          </a>
         </div>
       )}
       {open && view === "team" && (

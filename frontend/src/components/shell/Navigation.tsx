@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Database, Flame, LayoutDashboard, MapPinned } from "lucide-react";
+import { BarChart3, Database, Flame, LayoutDashboard, MapPinned, ScanSearch } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -13,6 +13,7 @@ const NAV = [
   { href: "/analytics", label: "Аналитика", icon: BarChart3, match: "analytics" as const },
   { href: "/analytics?tab=area", label: "Анализ", icon: MapPinned, match: "area" as const },
   { href: "/explorer", label: "Данные", icon: Database, match: "exact" as const },
+  { href: "/predict", label: "Предикт", icon: ScanSearch, match: "exact" as const },
 ];
 
 function NavigationLinks() {

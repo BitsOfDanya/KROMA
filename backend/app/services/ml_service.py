@@ -224,6 +224,141 @@ class MlService:
                 detail=f"BS inference failed: {exc}",
             )
 
+    def predict_upload(self, task: Kind, filename: str, data: bytes) -> dict[str, Any]:
+        """Run AF/BS on an uploaded raster/image. Returns JSON-serializable payload."""
+        from app.services.upload_decode import decode_upload, mask_to_png_b64
+
+        started = time.perf_counter()
+        decoded = decode_upload(filename, data)
+        array = decoded.pop("array")
+        chip_id = f"upload:{filename}"
+        payload = {"array": array, "filename": filename, "shape": decoded["shape"]}
+
+        if task == "af":
+            try:
+                self._ensure_af()
+                from kroma_ml.inference.af import predict_af_chip  # type: ignore
+
+                raw = predict_af_chip(self._af_model, chip_id, payload)
+                mask_b64 = None
+                if raw.get("mask") is not None:
+                    mask_b64 = mask_to_png_b64(raw["mask"], binary=True)
+                return {
+                    "task": "af",
+                    "input": decoded,
+                    "status": "ok",
+                    "detail": None,
+                    "model_version": self._af_version,
+                    "runtime_ms": (time.perf_counter() - started) * 1000,
+                    "n_fire_px": int(raw.get("n_fire_px", 0)),
+                    "confidence_mean": raw.get("confidence_mean"),
+                    "thermopoints": list(raw.get("thermopoints", [])),
+                    "mask_png_b64": mask_b64,
+                    "metrics": {
+                        "n_fire_px": int(raw.get("n_fire_px", 0)),
+                        "confidence_mean": raw.get("confidence_mean"),
+                    },
+                }
+            except MlUnavailableError as exc:
+                return {
+                    "task": "af",
+                    "input": decoded,
+                    "status": "unavailable",
+                    "detail": str(exc),
+                    "model_version": "unavailable",
+                    "runtime_ms": (time.perf_counter() - started) * 1000,
+                    "n_fire_px": 0,
+                    "confidence_mean": None,
+                    "thermopoints": [],
+                    "mask_png_b64": None,
+                    "metrics": {"n_fire_px": 0, "confidence_mean": None},
+                }
+            except Exception as exc:  # noqa: BLE001
+                return {
+                    "task": "af",
+                    "input": decoded,
+                    "status": "unavailable",
+                    "detail": f"AF inference failed: {exc}",
+                    "model_version": self._af_version,
+                    "runtime_ms": (time.perf_counter() - started) * 1000,
+                    "n_fire_px": 0,
+                    "confidence_mean": None,
+                    "thermopoints": [],
+                    "mask_png_b64": None,
+                    "metrics": {"n_fire_px": 0, "confidence_mean": None},
+                }
+
+        try:
+            self._ensure_bs()
+            from kroma_ml.inference.bs import predict_bs_scene  # type: ignore
+
+            raw = predict_bs_scene(self._bs_bundle, chip_id, payload)
+            mask_b64 = None
+            if raw.get("mask") is not None:
+                mask_b64 = mask_to_png_b64(raw["mask"], binary=False)
+            return {
+                "task": "bs",
+                "input": decoded,
+                "status": "ok",
+                "detail": None,
+                "model_version": self._bs_version,
+                "runtime_ms": (time.perf_counter() - started) * 1000,
+                "total_area_ha": raw.get("total_area_ha"),
+                "area_low_ha": raw.get("area_low_ha"),
+                "area_moderate_ha": raw.get("area_moderate_ha"),
+                "area_high_ha": raw.get("area_high_ha"),
+                "polygons": list(raw.get("polygons", [])),
+                "mask_png_b64": mask_b64,
+                "metrics": {
+                    "total_area_ha": raw.get("total_area_ha"),
+                    "area_low_ha": raw.get("area_low_ha"),
+                    "area_moderate_ha": raw.get("area_moderate_ha"),
+                    "area_high_ha": raw.get("area_high_ha"),
+                },
+            }
+        except MlUnavailableError as exc:
+            return {
+                "task": "bs",
+                "input": decoded,
+                "status": "unavailable",
+                "detail": str(exc),
+                "model_version": "unavailable",
+                "runtime_ms": (time.perf_counter() - started) * 1000,
+                "total_area_ha": None,
+                "area_low_ha": None,
+                "area_moderate_ha": None,
+                "area_high_ha": None,
+                "polygons": [],
+                "mask_png_b64": None,
+                "metrics": {
+                    "total_area_ha": None,
+                    "area_low_ha": None,
+                    "area_moderate_ha": None,
+                    "area_high_ha": None,
+                },
+            }
+        except Exception as exc:  # noqa: BLE001
+            return {
+                "task": "bs",
+                "input": decoded,
+                "status": "unavailable",
+                "detail": f"BS inference failed: {exc}",
+                "model_version": self._bs_version,
+                "runtime_ms": (time.perf_counter() - started) * 1000,
+                "total_area_ha": None,
+                "area_low_ha": None,
+                "area_moderate_ha": None,
+                "area_high_ha": None,
+                "polygons": [],
+                "mask_png_b64": None,
+                "metrics": {
+                    "total_area_ha": None,
+                    "area_low_ha": None,
+                    "area_moderate_ha": None,
+                    "area_high_ha": None,
+                },
+            }
+
 
 @lru_cache
 def get_ml_service() -> MlService:

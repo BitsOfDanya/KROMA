@@ -364,6 +364,35 @@ export interface MlStatus {
   note: string;
 }
 
+export interface UploadPredictInput {
+  filename: string;
+  kind: string;
+  shape: number[];
+  dtype: string;
+  bands: number;
+  nbytes: number;
+  preview_png_b64: string;
+}
+
+export interface UploadPredictResult {
+  task: TrainChipKind;
+  input: UploadPredictInput;
+  status: "ok" | "unavailable";
+  detail: string | null;
+  model_version: string;
+  runtime_ms: number;
+  n_fire_px?: number;
+  confidence_mean?: number | null;
+  thermopoints?: unknown[];
+  total_area_ha?: number | null;
+  area_low_ha?: number | null;
+  area_moderate_ha?: number | null;
+  area_high_ha?: number | null;
+  polygons?: unknown[];
+  mask_png_b64: string | null;
+  metrics: Record<string, number | null | undefined>;
+}
+
 export interface AnalysisQuery {
   datasetId: string;
   datasetVersion: string;
