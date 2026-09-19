@@ -1,0 +1,49 @@
+.page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  background: var(--background);
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 28px 60px;
+}
+
+.body {
+  margin-top: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.body p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.links a {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.links a:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}

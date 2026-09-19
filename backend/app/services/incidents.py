@@ -31,6 +31,7 @@ from app.schemas.incidents import (
     PerimeterStateSummary,
     PerimeterSummary,
     RiskExposure,
+    ScenarioWeather,
     SortField,
 )
 from app.services.errors import NotFoundError
@@ -48,6 +49,19 @@ def severity_for(priority: int) -> Severity:
     if priority >= 40:
         return "medium"
     return "low"
+
+
+def scenario_weather_for(incident: Incident) -> ScenarioWeather:
+    """Детерминированный контекст сценария из id и ветра — только для demo/replay."""
+    seed = sum(ord(char) for char in incident.id)
+    temperature_c = round(18 + (seed % 17) + (incident.spread.wind_speed_ms % 3), 1)
+    relative_humidity_pct = round(max(12.0, min(55.0, 48 - incident.spread.wind_speed_ms * 2.4 + (seed % 7))))
+    slope_deg = round(4 + (seed % 14) + (incident.spread.wind_speed_ms % 2), 1)
+    return ScenarioWeather(
+        temperature_c=temperature_c,
+        relative_humidity_pct=relative_humidity_pct,
+        slope_deg=slope_deg,
+    )
 
 
 @dataclass(frozen=True)
@@ -273,6 +287,7 @@ class IncidentService:
                 for zone in zones
             ],
             burn_scar_id=incident.burn_scar_id,
+            weather=scenario_weather_for(incident),
         )
 
     def timeline(self, incident_id: str) -> IncidentTimeline:

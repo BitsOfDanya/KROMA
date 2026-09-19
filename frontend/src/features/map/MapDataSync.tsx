@@ -17,6 +17,7 @@ import { snapBBox } from "@/lib/geo";
 import { incidentStateAtIndex, parseStateKey, stateKey } from "@/lib/replay";
 import { useWorkspace } from "@/state/workspace";
 
+import { AOI_SOURCE } from "./layers/aoi";
 import { BURN_SCARS_SOURCE } from "./layers/burnScars";
 import { CLOUDS_SOURCE, WIND_SOURCE } from "./layers/environment";
 import { FORECAST_SOURCE } from "./layers/forecast";
@@ -27,6 +28,7 @@ import { RISK_SOURCE } from "./layers/riskObjects";
 import { THERMAL_SOURCE } from "./layers/thermal";
 import { emptyCollection } from "./layers/types";
 import { useMapContext } from "./MapContext";
+import { enrichWindCollection } from "./windField";
 
 const AGGREGATION_ZOOM = 3;
 const HOTSPOT_WINDOW_MS = 7 * 24 * 3_600_000;
@@ -219,8 +221,42 @@ function ReplayLayerSources({ bbox, aggregated }: { bbox: BBox | null; aggregate
   useSource(BURN_SCARS_SOURCE, asGeoJSON(burnScars.data));
   useSource(RISK_SOURCE, asGeoJSON(risk.data));
   useSource(THERMAL_SOURCE, asGeoJSON(thermal.data));
-  useSource(WIND_SOURCE, asGeoJSON(wind.data));
+  useSource(WIND_SOURCE, enrichWindCollection(wind.data as FeatureCollection<{ from_deg?: number; to_deg?: number; speed_ms?: number }> | undefined));
   useSource(CLOUDS_SOURCE, asGeoJSON(clouds.data));
+  return null;
+}
+
+function AoiSource() {
+  const [data, setData] = useState<GeoJSON.GeoJSON>(emptyCollection());
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/data/fire_monitoring_aoi.geojson")
+      .then((response) => {
+        if (!response.ok) throw new Error(`AOI HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((collection: GeoJSON.FeatureCollection) => {
+        if (cancelled) return;
+        setData({
+          type: "FeatureCollection",
+          features: (collection.features ?? []).map((feature) => ({
+            ...feature,
+            properties: {
+              ...(feature.properties ?? {}),
+              feature_id: String(feature.id ?? (feature.properties as { id?: string } | null)?.id ?? ""),
+              name: String((feature.properties as { name?: string } | null)?.name ?? feature.id ?? ""),
+            },
+          })),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setData(emptyCollection());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  useSource(AOI_SOURCE, data);
   return null;
 }
 
@@ -233,6 +269,7 @@ export function MapDataSync() {
 
   return (
     <>
+      <AoiSource />
       <IncidentSources appMode={appMode} bbox={bbox} />
       <ForecastSource />
       {appMode === "live" ? (

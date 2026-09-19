@@ -179,9 +179,10 @@ function lineLayers(palette: Palette, mode: BasemapMode): LayerSpecification[] {
       filter: ["all", ["==", ["get", "admin_level"], 4], ["!=", ["get", "maritime"], 1]],
       layout: { "line-join": "round" },
       paint: {
-        "line-color": satellite ? "rgba(255,255,255,0.35)" : palette["map-boundary"],
-        "line-width": ["interpolate", ["linear"], ["zoom"], 3, 0.6, 8, 1.1],
-        "line-dasharray": [4, 2.5],
+        "line-color": satellite ? "rgba(255,255,255,0.42)" : palette["map-boundary"],
+        "line-width": ["interpolate", ["linear"], ["zoom"], 3, 0.8, 8, 1.35],
+        "line-dasharray": [5, 2.5],
+        "line-opacity": 0.9,
       },
     },
     {
@@ -192,8 +193,9 @@ function lineLayers(palette: Palette, mode: BasemapMode): LayerSpecification[] {
       filter: ["all", ["==", ["get", "admin_level"], 2], ["!=", ["get", "maritime"], 1], ["!=", ["get", "disputed"], 1]],
       layout: { "line-join": "round" },
       paint: {
-        "line-color": satellite ? "rgba(255,255,255,0.55)" : palette["map-country"],
-        "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.8, 8, 1.6],
+        "line-color": satellite ? "rgba(255,255,255,0.62)" : palette["map-country"],
+        "line-width": ["interpolate", ["linear"], ["zoom"], 2, 1, 8, 1.9],
+        "line-opacity": 0.95,
       },
     },
   ];

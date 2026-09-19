@@ -10,6 +10,7 @@ export type BasemapMode = "map" | "satellite" | "terrain";
 export type EvidenceMode = "events" | "data";
 export type QueueFilter = "all" | "critical" | "confirmed" | "monitoring";
 export type AppMode = "live" | "replay";
+export type MapProfile = "ops" | "fireWeather";
 
 export type LayerId =
   | "incidents"
@@ -26,7 +27,8 @@ export type LayerId =
   | "infrastructure"
   | "protectedAreas"
   | "wind"
-  | "clouds";
+  | "clouds"
+  | "monitoringAoi";
 
 export type CameraRequest =
   | { kind: "bounds"; bbox: BBox; maxZoom?: number; nonce: number }
@@ -52,10 +54,32 @@ export const DEFAULT_LAYERS: Record<LayerId, boolean> = {
   protectedAreas: false,
   wind: false,
   clouds: false,
+  monitoringAoi: true,
+};
+
+const FIRE_WEATHER_LAYERS: Record<LayerId, boolean> = {
+  ...DEFAULT_LAYERS,
+  incidents: true,
+  rawDetections: false,
+  burnScars: true,
+  perimeter: true,
+  activeFront: true,
+  forecastP50: false,
+  forecastP80: false,
+  forecastP95: false,
+  thermalMemory: false,
+  settlements: true,
+  roads: false,
+  infrastructure: false,
+  protectedAreas: false,
+  wind: true,
+  clouds: true,
+  monitoringAoi: true,
 };
 
 interface WorkspaceState {
   appMode: AppMode;
+  mapProfile: MapProfile;
   selectedIncidentId: string | null;
   panel: Panel;
   basemap: BasemapMode;
@@ -73,6 +97,7 @@ interface WorkspaceState {
   measuring: boolean;
   camera: CameraRequest | null;
   setAppMode: (mode: AppMode) => void;
+  setMapProfile: (profile: MapProfile) => void;
   selectIncident: (id: string | null) => void;
   togglePanel: (panel: Exclude<Panel, null>) => void;
   closePanel: () => void;
@@ -98,6 +123,7 @@ let cameraNonce = 0;
 
 export const useWorkspace = create<WorkspaceState>((set) => ({
   appMode: "replay",
+  mapProfile: "ops",
   selectedIncidentId: null,
   panel: "incidents",
   basemap: "map",
@@ -115,7 +141,23 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
   measuring: false,
   camera: null,
   setAppMode: (appMode) =>
-    set({ appMode, selectedIncidentId: null, playing: false, cursor: null, panel: "incidents" }),
+    set({ appMode, selectedIncidentId: null, playing: false, cursor: null, panel: "incidents", mapProfile: "ops" }),
+  setMapProfile: (mapProfile) =>
+    set((state) =>
+      mapProfile === "fireWeather"
+        ? {
+            mapProfile,
+            basemap: "terrain",
+            evidenceMode: "events",
+            layers: { ...FIRE_WEATHER_LAYERS },
+            measuring: false,
+          }
+        : {
+            mapProfile,
+            basemap: state.basemap === "terrain" ? "map" : state.basemap,
+            layers: { ...DEFAULT_LAYERS },
+          },
+    ),
   selectIncident: (id) => set({ selectedIncidentId: id }),
   togglePanel: (panel) => set((state) => ({ panel: state.panel === panel ? null : panel })),
   closePanel: () => set({ panel: null }),
@@ -129,9 +171,9 @@ export const useWorkspace = create<WorkspaceState>((set) => ({
     set((state) => {
       const layers = { ...state.layers, [id]: !state.layers[id] };
       const evidenceMode = id === "rawDetections" ? (layers.rawDetections ? "data" : "events") : state.evidenceMode;
-      return { layers, evidenceMode };
+      return { layers, evidenceMode, mapProfile: "ops" };
     }),
-  setLayer: (id, visible) => set((state) => ({ layers: { ...state.layers, [id]: visible } })),
+  setLayer: (id, visible) => set((state) => ({ layers: { ...state.layers, [id]: visible }, mapProfile: "ops" })),
   setQueueFilter: (queueFilter) => set({ queueFilter }),
   setRegion: (regionId) => set({ regionId }),
   toggleStatus: (status) =>

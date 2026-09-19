@@ -56,6 +56,9 @@ export function UserMenu() {
             <Users size={14} strokeWidth={1.75} />
             О команде
           </button>
+          <a href="/about" className={styles.menuItem} onClick={close}>
+            О проекте
+          </a>
         </div>
       )}
       {open && view === "team" && (
@@ -68,6 +71,9 @@ export function UserMenu() {
           <p className={styles.teamText}>
             5bit — команда разработчиков и ML-инженеров с опытом хакатонов, продуктовой разработки, backend, frontend, ML и geospatial задач.
           </p>
+          <a href="/about" className={styles.menuItem} onClick={close}>
+            Страница о проекте
+          </a>
         </div>
       )}
     </div>

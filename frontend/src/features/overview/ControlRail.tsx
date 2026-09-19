@@ -1,6 +1,6 @@
 "use client";
 
-import { History, Layers, ListOrdered, LocateFixed, Ruler, SlidersHorizontal } from "lucide-react";
+import { History, Layers, ListOrdered, LocateFixed, Ruler, SlidersHorizontal, Wind } from "lucide-react";
 
 import { IconButton } from "@/components/ui/IconButton";
 import { useLiveIncidents, useOverview } from "@/lib/api/queries";
@@ -22,6 +22,8 @@ export function ControlRail() {
   const priorityMin = useWorkspace((state) => state.priorityMin);
   const overview = useOverview();
   const appMode = useWorkspace((state) => state.appMode);
+  const mapProfile = useWorkspace((state) => state.mapProfile);
+  const setMapProfile = useWorkspace((state) => state.setMapProfile);
   const liveIncidents = useLiveIncidents(null, appMode === "live");
   const liveCritical = ((liveIncidents.data as FeatureCollection<{ severity: string }> | undefined)?.features ?? []).filter(
     (item) => item.properties.severity === "critical",
@@ -81,6 +83,16 @@ export function ControlRail() {
         icon={<History {...ICON} />}
         onClick={toggleTimelineExpanded}
       />
+      {appMode === "replay" && (
+        <IconButton
+          label={mapProfile === "fireWeather" ? "Выйти из погодного режима" : "Погодный контекст"}
+          tooltipSide="right"
+          active={mapProfile === "fireWeather"}
+          aria-pressed={mapProfile === "fireWeather"}
+          icon={<Wind {...ICON} />}
+          onClick={() => setMapProfile(mapProfile === "fireWeather" ? "ops" : "fireWeather")}
+        />
+      )}
       <div className={styles.railDivider} />
       <IconButton label="К региону" tooltipSide="right" icon={<LocateFixed {...ICON} />} onClick={locate} />
       <IconButton

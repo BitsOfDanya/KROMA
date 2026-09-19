@@ -21,6 +21,7 @@ export function MapControls() {
   const { map } = useMapContext();
   const basemap = useWorkspace((state) => state.basemap);
   const setBasemap = useWorkspace((state) => state.setBasemap);
+  const windOn = useWorkspace((state) => state.layers.wind);
   const [legendOpen, setLegendOpen] = useState(true);
   const [bearing, setBearing] = useState(0);
 
@@ -42,6 +43,20 @@ export function MapControls() {
         onChange={setBasemap}
         className={styles.basemapSwitch}
       />
+      {windOn && (
+        <div className={styles.windHint} role="status">
+          <span className={styles.windHintGlyph} aria-hidden="true">
+            <svg width="18" height="14" viewBox="0 0 18 14">
+              <path d="M1 7 H11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M8 3 L13.5 7 L8 11 Z" fill="currentColor" />
+            </svg>
+          </span>
+          <span>
+            <strong>Ветер</strong>
+            <em>стрелка = куда дует · подпись = румб и м/с</em>
+          </span>
+        </div>
+      )}
       <div className={styles.controlGroup}>
         <IconButton label="Приблизить" tooltipSide="left" icon={<Plus size={16} strokeWidth={1.75} />} onClick={() => map?.zoomIn()} />
         <IconButton label="Отдалить" tooltipSide="left" icon={<Minus size={16} strokeWidth={1.75} />} onClick={() => map?.zoomOut()} />

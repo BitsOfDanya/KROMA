@@ -31,6 +31,17 @@ function incidentColor(palette: Palette): ExpressionSpecification {
   return ["case", ["==", ["get", "status"], "localized"], palette["incident-localized"], severityColor(palette)];
 }
 
+const activeFire: ExpressionSpecification = [
+  "all",
+  unclustered,
+  ["in", ["get", "status"], ["literal", ["confirmed", "monitoring"]]],
+];
+const quietPoint: ExpressionSpecification = [
+  "all",
+  unclustered,
+  ["!", ["in", ["get", "status"], ["literal", ["confirmed", "monitoring"]]]],
+];
+
 function markerLayers(source: string, palette: Palette): OperationalLayer[] {
   const color = incidentColor(palette);
   const hover: ExpressionSpecification = ["boolean", ["feature-state", "hover"], false];
@@ -42,30 +53,13 @@ function markerLayers(source: string, palette: Palette): OperationalLayer[] {
         id: `${source}-halo`,
         type: "circle",
         source,
-        filter: ["all", unclustered, ["==", ["get", "status"], "confirmed"]],
+        filter: activeFire,
         paint: {
           "circle-color": color,
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 10, 10, 17],
-          "circle-opacity": ["case", ["==", ["get", "severity"], "critical"], 0.2, 0.13],
-          "circle-blur": 0.55,
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 9, 10, 15],
+          "circle-opacity": ["case", ["==", ["get", "severity"], "critical"], 0.22, 0.14],
+          "circle-blur": 0.6,
           "circle-pitch-alignment": "map",
-        },
-      },
-    },
-    {
-      placement: "over-labels",
-      visible: visibleInEvents,
-      spec: {
-        id: `${source}-ring-outer`,
-        type: "circle",
-        source,
-        filter: ["all", unclustered, ["==", ["get", "severity"], "critical"], ["!=", ["get", "status"], "localized"]],
-        paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 11.5, 10, 15],
-          "circle-opacity": 0,
-          "circle-stroke-color": color,
-          "circle-stroke-width": 1,
-          "circle-stroke-opacity": 0.4,
         },
       },
     },
@@ -76,7 +70,7 @@ function markerLayers(source: string, palette: Palette): OperationalLayer[] {
         id: `${source}-ring`,
         type: "circle",
         source,
-        filter: unclustered,
+        filter: quietPoint,
         paint: {
           "circle-radius": [
             "interpolate",
@@ -88,10 +82,10 @@ function markerLayers(source: string, palette: Palette): OperationalLayer[] {
             statusValue({ suspected: 8, confirmed: 10, monitoring: 9, localized: 6.5 }),
           ],
           "circle-color": palette["map-background"],
-          "circle-opacity": statusValue({ suspected: 0.35, confirmed: 0, monitoring: 0.25, localized: 0.2 }),
+          "circle-opacity": 0.35,
           "circle-stroke-color": color,
-          "circle-stroke-width": ["case", hover, 2, statusValue({ suspected: 1.5, confirmed: 1.1, monitoring: 1.3, localized: 1 })],
-          "circle-stroke-opacity": statusValue({ suspected: 0.95, confirmed: 0.6, monitoring: 0.8, localized: 0.7 }),
+          "circle-stroke-width": ["case", hover, 2, 1.5],
+          "circle-stroke-opacity": 0.95,
         },
       },
     },
@@ -102,21 +96,43 @@ function markerLayers(source: string, palette: Palette): OperationalLayer[] {
         id: `${source}-core`,
         type: "circle",
         source,
-        filter: unclustered,
+        filter: quietPoint,
         paint: {
-          "circle-radius": [
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 1.8, 10, 2.5],
+          "circle-color": color,
+          "circle-opacity": 1,
+        },
+      },
+    },
+    {
+      placement: "over-labels",
+      visible: visibleInEvents,
+      spec: {
+        id: `${source}-flame`,
+        type: "symbol",
+        source,
+        filter: activeFire,
+        layout: {
+          "icon-image": "k-flame",
+          "icon-size": [
             "interpolate",
             ["linear"],
             ["zoom"],
             3,
-            statusValue({ suspected: 1.8, confirmed: 4, monitoring: 3, localized: 1.8 }),
+            ["case", ["==", ["get", "severity"], "critical"], 0.42, 0.34],
             10,
-            statusValue({ suspected: 2.4, confirmed: 5.5, monitoring: 4.2, localized: 2.4 }),
+            ["case", ["==", ["get", "severity"], "critical"], 0.62, 0.5],
           ],
-          "circle-color": color,
-          "circle-opacity": statusValue({ suspected: 1, confirmed: 1, monitoring: 0.75, localized: 0.9 }),
-          "circle-stroke-color": palette["map-background"],
-          "circle-stroke-width": ["case", ["==", ["get", "status"], "confirmed"], 1, 0],
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+          "icon-anchor": "bottom",
+          "icon-offset": [0, 2],
+        },
+        paint: {
+          "icon-color": color,
+          "icon-opacity": ["case", hover, 1, ["==", ["get", "status"], "monitoring"], 0.82, 0.95],
+          "icon-halo-color": palette["map-background"],
+          "icon-halo-width": 1.1,
         },
       },
     },
@@ -151,7 +167,7 @@ function markerLayers(source: string, palette: Palette): OperationalLayer[] {
           "text-font": FONT_BOLD,
           "text-size": 10.5,
           "text-anchor": "left",
-          "text-offset": [1.45, 0],
+          "text-offset": [1.55, -0.15],
           "text-letter-spacing": 0.02,
           "text-optional": true,
         },
@@ -249,4 +265,5 @@ export const INCIDENT_INTERACTIVE_LAYERS = [INCIDENTS_SOURCE, INCIDENTS_PRIORITY
   `${source}-core`,
   `${source}-ring`,
   `${source}-halo`,
+  `${source}-flame`,
 ]);

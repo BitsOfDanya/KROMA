@@ -82,6 +82,15 @@ class ForecastSummary(BaseModel):
     issued_at: datetime
 
 
+class ScenarioWeather(BaseModel):
+    """Демонстрационный погодный контекст сценария — не live-метеоданные."""
+
+    temperature_c: float
+    relative_humidity_pct: float
+    slope_deg: float
+    source: Literal["scenario"] = "scenario"
+
+
 class IncidentDetail(IncidentSummary):
     landcover: str
     ignition_point: Position
@@ -91,6 +100,7 @@ class IncidentDetail(IncidentSummary):
     perimeter: PerimeterSummary | None
     forecast: list[ForecastSummary]
     burn_scar_id: str | None
+    weather: ScenarioWeather | None = None
 
 
 class PerimeterStateSummary(BaseModel):

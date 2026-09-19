@@ -82,14 +82,45 @@ export function IncidentDetails({ detail, state }: { detail: IncidentDetail; sta
           <div>
             <dt>Ветер</dt>
             <dd>
-              {compassPoint(detail.spread.wind_from_deg)} <small>{detail.spread.wind_speed_ms.toLocaleString("ru-RU")} м/с</small>
+              {detail.spread.wind_speed_ms.toLocaleString("ru-RU")} м/с → {compassPoint(detail.spread.direction_deg)}
             </dd>
           </div>
+          <div>
+            <dt>Покров</dt>
+            <dd>{detail.landcover}</dd>
+          </div>
+          {detail.weather && (
+            <>
+              <div>
+                <dt>Температура</dt>
+                <dd>
+                  {detail.weather.temperature_c.toLocaleString("ru-RU")} <small>°C</small>
+                </dd>
+              </div>
+              <div>
+                <dt>Влажность</dt>
+                <dd>
+                  {detail.weather.relative_humidity_pct.toLocaleString("ru-RU")} <small>%</small>
+                </dd>
+              </div>
+              <div>
+                <dt>Уклон</dt>
+                <dd>
+                  {detail.weather.slope_deg.toLocaleString("ru-RU")} <small>°</small>
+                </dd>
+              </div>
+            </>
+          )}
           <div>
             <dt>Наблюдения</dt>
             <dd>{pluralize(state.observation_count, ["пиксель", "пикселя", "пикселей"])}</dd>
           </div>
         </dl>
+        {detail.weather && (
+          <p className={styles.sectionHint} style={{ marginTop: 8 }}>
+            Погода и уклон — контекст сценария, не live-метеоданные и не прогноз распространения.
+          </p>
+        )}
       </section>
 
       {detail.exposures.length > 0 && (

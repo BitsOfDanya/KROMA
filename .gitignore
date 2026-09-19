@@ -42,5 +42,7 @@ coverage/
 *.ipynb_checkpoints/
 data/*
 !data/README.md
+!data/fire-aoi/
+!data/fire-aoi/**
 ml/models/
 frontend/public/maplibre/

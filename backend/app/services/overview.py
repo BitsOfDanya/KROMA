@@ -24,7 +24,7 @@ class OverviewService:
             reference_time=reference,
             data_source="demo",
             regions=self.repository.regions(),
-            default_region_id="krasnoyarsk",
+            default_region_id="aoi",
             counts=self.incidents.counts(summaries),
             observations_24h=len(last_day),
             raw_detections_7d=len(recent),

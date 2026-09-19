@@ -63,7 +63,7 @@ export const mapProviders: MapProviderConfig = {
 };
 
 export const INITIAL_VIEW = {
-  center: [96.5, 59.2] as [number, number],
-  zoom: 3.55,
+  center: [43.15, 48.65] as [number, number],
+  zoom: 5.15,
 };
 

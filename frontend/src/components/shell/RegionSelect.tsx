@@ -26,8 +26,11 @@ export function RegionSelect() {
     setRegion(id);
     setOpen(false);
     const region = regions.find((item) => item.id === id);
-    if (region) requestCamera({ kind: "center", center: region.center, zoom: region.zoom });
-    else requestCamera({ kind: "center", center: [104, 60], zoom: 2.8 });
+    if (region) {
+      requestCamera({ kind: "bounds", bbox: region.bbox, maxZoom: region.zoom + 1.2 });
+    } else {
+      requestCamera({ kind: "bounds", bbox: [38.3, 44.6, 48.0, 52.7], maxZoom: 5.4 });
+    }
   };
 
   return (

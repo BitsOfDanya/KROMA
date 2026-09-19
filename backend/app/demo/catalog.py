@@ -7,8 +7,57 @@ from app.models.incident import EvidenceEffect, EvidenceStrength, IncidentStatus
 
 REGIONS: tuple[Region, ...] = (
     Region(
+        id="aoi",
+        name="Нижнее Поволжье и Подонье",
+        short_name="АОИ мониторинга",
+        bbox=(38.3, 44.6, 48.0, 52.7),
+        center=(43.15, 48.65),
+        zoom=5.15,
+    ),
+    Region(
+        id="rostov",
+        name="Ростовская область",
+        short_name="Ростовская",
+        bbox=(38.3, 45.8, 44.2, 50.3),
+        center=(41.0, 47.85),
+        zoom=6.1,
+    ),
+    Region(
+        id="volgograd",
+        name="Волгоградская область",
+        short_name="Волгоградская",
+        bbox=(41.1, 47.4, 47.5, 51.3),
+        center=(44.0, 49.2),
+        zoom=6.0,
+    ),
+    Region(
+        id="astrakhan",
+        name="Астраханская область",
+        short_name="Астраханская",
+        bbox=(44.8, 44.8, 48.0, 48.8),
+        center=(46.5, 46.6),
+        zoom=6.3,
+    ),
+    Region(
+        id="saratov",
+        name="Саратовская область (запад и центр)",
+        short_name="Саратовская",
+        bbox=(42.5, 50.0, 48.0, 52.7),
+        center=(45.2, 51.35),
+        zoom=6.2,
+    ),
+    Region(
+        id="kalmykia",
+        name="Республика Калмыкия",
+        short_name="Калмыкия",
+        bbox=(44.0, 44.7, 47.6, 48.5),
+        center=(45.5, 46.55),
+        zoom=6.4,
+    ),
+    # Демо-сценарий обзора (FIRMS/replay showcase), вне конкурсного AOI
+    Region(
         id="krasnoyarsk",
-        name="Красноярский край",
+        name="Красноярский край (сценарий)",
         short_name="Красноярский",
         bbox=(78.0, 51.7, 114.0, 77.8),
         center=(95.2, 59.4),
@@ -16,7 +65,7 @@ REGIONS: tuple[Region, ...] = (
     ),
     Region(
         id="irkutsk",
-        name="Иркутская область",
+        name="Иркутская область (сценарий)",
         short_name="Иркутская",
         bbox=(95.6, 51.1, 119.2, 64.4),
         center=(106.5, 57.8),
@@ -24,7 +73,7 @@ REGIONS: tuple[Region, ...] = (
     ),
     Region(
         id="sakha",
-        name="Республика Саха (Якутия)",
+        name="Республика Саха (сценарий)",
         short_name="Якутия",
         bbox=(105.5, 55.4, 162.9, 77.2),
         center=(125.0, 63.5),
@@ -32,7 +81,7 @@ REGIONS: tuple[Region, ...] = (
     ),
     Region(
         id="zabaykalsky",
-        name="Забайкальский край",
+        name="Забайкальский край (сценарий)",
         short_name="Забайкальский",
         bbox=(107.7, 49.1, 122.2, 58.4),
         center=(115.5, 53.0),

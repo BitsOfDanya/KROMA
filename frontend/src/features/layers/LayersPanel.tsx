@@ -50,7 +50,7 @@ const GROUPS: { title: string; rows: LayerRow[]; replayOnly?: boolean }[] = [
       { id: "activeFront", label: "Активная кромка", glyph: line("var(--incident-critical)"), replayOnly: true },
       {
         id: "thermalMemory",
-        label: "Thermal Memory",
+        label: "Тепловая память",
         hint: "Постоянные тепловые источники",
         replayOnly: true,
         glyph: (
@@ -71,6 +71,17 @@ const GROUPS: { title: string; rows: LayerRow[]; replayOnly?: boolean }[] = [
     ],
   },
   {
+    title: "Территория",
+    rows: [
+      {
+        id: "monitoringAoi",
+        label: "Территория мониторинга",
+        hint: "АОИ из датасета · Нижнее Поволжье и Подонье",
+        glyph: fill("var(--protected-area)", 0.18),
+      },
+    ],
+  },
+  {
     title: "Контекст",
     replayOnly: true,
     rows: [
@@ -87,9 +98,11 @@ const GROUPS: { title: string; rows: LayerRow[]; replayOnly?: boolean }[] = [
       {
         id: "wind",
         label: "Ветер",
+        hint: "Стрелки потока · румб и м/с",
         glyph: (
           <svg width="20" height="14" aria-hidden="true">
-            <path d="M3 7 H16 M12 3.5 L16 7 L12 10.5" fill="none" stroke="var(--wind)" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M2 7 H12" stroke="var(--wind)" strokeWidth="2" strokeLinecap="round" />
+            <path d="M9 3.5 L14.5 7 L9 10.5 Z" fill="var(--wind)" />
           </svg>
         ),
       },

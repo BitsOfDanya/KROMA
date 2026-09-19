@@ -62,6 +62,47 @@
   backdrop-filter: blur(8px);
 }
 
+.windHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 230px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--wind) 14%, var(--surface-overlay));
+  border: 1px solid color-mix(in srgb, var(--wind) 35%, var(--border));
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(8px);
+  color: var(--text-secondary);
+}
+
+.windHintGlyph {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--wind) 18%, transparent);
+  color: var(--wind);
+  flex: none;
+}
+
+.windHint strong {
+  display: block;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.windHint em {
+  display: block;
+  margin-top: 2px;
+  font-style: normal;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-tertiary);
+}
+
 .legend {
   width: 212px;
   padding: 14px 16px 16px;

@@ -136,6 +136,12 @@ export interface IncidentDetail extends IncidentSummary {
   perimeter: { observed_at: string; source: string; area_ha: number; front_length_km: number } | null;
   forecast: { level: ForecastLevel; area_ha: number; horizon_hours: number; issued_at: string }[];
   burn_scar_id: string | null;
+  weather?: {
+    temperature_c: number;
+    relative_humidity_pct: number;
+    slope_deg: number;
+    source: "scenario";
+  } | null;
 }
 
 export interface TimelineEvent {
