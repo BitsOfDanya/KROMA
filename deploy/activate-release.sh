@@ -39,13 +39,19 @@ rollback() {
 trap rollback ERR
 
 cd "${RELEASE_DIR}"
+"${RELEASE_DIR}/deploy/prepare-train.sh"
+export KROMA_TRAIN_HOST_PATH="/opt/kroma/shared/train"
 export KROMA_REVISION="${REVISION}"
 docker compose -p kroma -f "${COMPOSE_FILE}" build --pull
 docker compose -p kroma -f "${COMPOSE_FILE}" up -d --remove-orphans
 
 for attempt in {1..45}; do
   if curl --fail --silent --show-error --max-time 5 http://127.0.0.1/health >/dev/null \
-    && curl --fail --silent --show-error --max-time 5 http://127.0.0.1/ >/dev/null; then
+    && curl --fail --silent --show-error --max-time 5 http://127.0.0.1/ >/dev/null \
+    && curl --fail --silent --show-error --max-time 10 \
+      http://127.0.0.1/api/v1/datasets/train/BS_tr_000001/preview/s2_pre >/dev/null \
+    && curl --fail --silent --show-error --max-time 10 \
+      http://127.0.0.1/api/v1/datasets/train/AF_tr_000001/preview/viirs >/dev/null; then
     ln -sfn "${RELEASE_DIR}" "${CURRENT_LINK}"
     printf '%s\n' "${REVISION}" >"${APP_ROOT}/deployed-revision"
     docker image prune -f >/dev/null

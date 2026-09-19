@@ -287,6 +287,12 @@ export function ExplorerView() {
             </div>
           )}
 
+          {train.data && !train.data.available && (
+            <StateMessage
+              title="Снимки TRAIN пока недоступны"
+              detail="Метаданные доступны, исходные TIFF ещё не подключены на сервере."
+            />
+          )}
           {train.isPending && <p className={styles.muted}>Загружаем индекс TRAIN…</p>}
           {train.isError && <ErrorMessage error={train.error} onRetry={() => train.refetch()} />}
           {train.data && train.data.items.length === 0 && (

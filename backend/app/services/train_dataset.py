@@ -164,8 +164,16 @@ class TrainDatasetService:
             raise HTTPException(status_code=404, detail=f"Unknown train chip: {chip_id}")
         kind = chip["kind"]
         assets = list(ASSET_PATHS.get(kind, {}).keys())
+        assets_available = self.source == "tar" or (
+            self.directory_present
+            and all(
+                (self.train_dir / Path(template.format(id=chip_id)).relative_to("train")).is_file()
+                for template in ASSET_PATHS[kind].values()
+            )
+        )
         prediction_ready = (
             self.directory_present
+            and assets_available
             and self.georef(chip_id) is not None
             and bool(get_ml_service().ready(kind))
         )
@@ -178,6 +186,7 @@ class TrainDatasetService:
                     if kind == "af"
                     else ["before_after", "ground_truth", "layers"]
                 ),
+                "assets_available": assets_available,
                 "prediction_available": prediction_ready,
                 "prediction_note": (
                     "Предсказание финальной модели (in-sample: модель обучена на всех train-чипах)."

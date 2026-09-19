@@ -127,6 +127,15 @@ function AfInspector({ chip }: { chip: TrainChip }) {
     ml.data?.af.ready && chip.inspector?.prediction_available,
   );
 
+  if (!chip.inspector?.assets_available) {
+    return (
+      <StateMessage
+        title="Снимки TRAIN недоступны"
+        detail={<>Исходные TIFF ещё не подключены на сервере. Можно <Link href="/predict">загрузить свой чип</Link> для предикта.</>}
+      />
+    );
+  }
+
   return (
     <div className={styles.inspectorBody}>
       <div className={styles.modeRow} role="tablist" aria-label="Режим AF">
@@ -203,6 +212,15 @@ function BsInspector({ chip }: { chip: TrainChip }) {
   const predictionReady = Boolean(
     ml.data?.bs.ready && chip.inspector?.prediction_available,
   );
+
+  if (!chip.inspector?.assets_available) {
+    return (
+      <StateMessage
+        title="Снимки TRAIN недоступны"
+        detail={<>Исходные TIFF ещё не подключены на сервере. Можно <Link href="/predict">загрузить свой чип</Link> для предикта.</>}
+      />
+    );
+  }
 
   return (
     <div className={styles.inspectorBody}>

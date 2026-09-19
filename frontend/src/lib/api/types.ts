@@ -361,6 +361,7 @@ export interface TrainChip {
   assets?: TrainAsset[];
   inspector?: {
     modes: string[];
+    assets_available: boolean;
     prediction_available: boolean;
     prediction_note: string;
   };

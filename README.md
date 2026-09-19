@@ -178,7 +178,7 @@ docker compose up --build
 
 Compose монтирует TRAIN и веса read-only; пути `KROMA_TRAIN_HOST_PATH` / `KROMA_ML_ARTIFACTS_HOST_PATH` можно изменить в `.env`. Backend image устанавливает geo + ml + backend и CPU Torch; GPU deployment требует соответствующего Torch runtime. Необязательная БД: `docker compose --profile persistence up db`.
 
-Production: `docker compose -f docker-compose.prod.yml up -d --build`; Caddy обслуживает API и frontend. `.github/workflows/deploy.yml` выкладывает main через существующий механизм release/health/rollback. Integration-проход сам по себе не публикует изменения и не запускает deploy.
+Production: `docker compose -f docker-compose.prod.yml up -d --build`; Caddy обслуживает API и frontend. `.github/workflows/deploy.yml` выкладывает main через release/health/rollback. При первом деплое `deploy/prepare-train.sh` скачивает официальный TRAIN (~2.14 ГБ) в `/opt/kroma/shared/train`, который монтируется в backend и сохраняется между релизами. Для загрузки требуется не менее 3 ГиБ свободного места в `/opt/kroma/shared`. Integration-проход сам по себе не публикует изменения и не запускает deploy.
 
 ## Проверки
 

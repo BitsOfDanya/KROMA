@@ -15,7 +15,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -35,7 +35,7 @@ jobs:
 
       - name: Upload and activate release
         run: |
-          ssh_options=(-i ~/.ssh/kroma_deploy -o IdentitiesOnly=yes)
+          ssh_options=(-i ~/.ssh/kroma_deploy -o IdentitiesOnly=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=20)
           archive="/tmp/kroma-${GITHUB_SHA}.tar.gz"
           remote_archive="/opt/kroma/incoming/${GITHUB_SHA}.tar.gz"
           ssh "${ssh_options[@]}" kroma-deploy@5.129.225.86 \
