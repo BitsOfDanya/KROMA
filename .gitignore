@@ -79,3 +79,14 @@ research/experiments/*_oof.npz
 tmp/
 temp/
 *.log
+
+# Local competition scratch outputs
+artifacts/af_submission.csv
+artifacts/af_test_*
+artifacts/bs_submission*.csv
+artifacts/bs_test_*
+artifacts/submissions/candidates/
+artifacts/submissions/diagnostic/
+
+# Local source notebooks
+cosmohack_dataset*.ipynb
