@@ -1,0 +1,14 @@
+{
+  "source": "Постановка кейса, КосмоХакатон 2026, с. 8, Рисунок 6 «Пороги эталонной разметки»",
+  "index": {
+    "nbr": "(B8A - B12) / (B8A + B12)",
+    "dnbr": "NBR_pre - NBR_post",
+    "rdnbr": "dNBR / (sqrt(|NBR_pre|) + 0.01), clipped to [-6, 6]"
+  },
+  "groups": {
+    "forest_shrub": {"threshold_0_1": 0.10, "threshold_1_2": 0.27, "threshold_2_3": 0.66, "worldcover": [10, 20]},
+    "grassland": {"threshold_0_1": 0.062, "threshold_1_2": 0.204, "threshold_2_3": 0.386, "worldcover": [30]},
+    "cropland": {"threshold_0_1": 0.07, "threshold_1_2": 0.177, "threshold_2_3": 0.38, "worldcover": [40]},
+    "wetland_floodplain": {"threshold_0_1": 0.075, "threshold_1_2": 0.331, "threshold_2_3": 0.677, "worldcover": [90, 95]}
+  }
+}

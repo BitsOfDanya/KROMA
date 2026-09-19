@@ -1,5 +1,3 @@
 # Geo
 
-Пакет `kroma_geo`. Сейчас содержит чистые геодезические утилиты без внешних зависимостей (`src/kroma_geo/measure.py`): haversine, bearing, destination point, площадь полигона, point-in-ring, расстояние до отрезка/линии, bbox-операции. Используется backend'ом (`app/demo/`, `app/services/`, `app/live/`) для генерации демо-геометрий и фильтрации по bbox.
-
-Растровая обработка и работа с PostGIS пока не реализованы — добавляйте по мере появления задач.
+`kroma_geo.measure` сохраняет геоутилиты, используемые backend. `kroma_geo.context` добавляет общий bbox/GeoJSON AOI, назначение региона по локальному FeatureCollection и расстояния до локальных объектов. Поддерживаются Polygon/MultiPolygon, отверстия и пересечение 180-го меридиана. Для быстрой работы с границами установить `kroma-geo[vector]` (Shapely), базовая реализация работает и без него. `kroma_geo.raster` обрабатывает локальные WorldCover COG и вычисляет NDVI/NBR; для растров установить `kroma-geo[raster]`. Реальные границы РФ, OSM extracts и тайлы COG не включены в Git; статус источников — в [каталоге](../docs/data/sources.md).

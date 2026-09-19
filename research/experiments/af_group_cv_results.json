@@ -1,0 +1,108 @@
+{
+  "folds": [
+    {
+      "fold": 1,
+      "val_chips": 140,
+      "lgbm": {
+        "precision": 0.9618,
+        "recall": 0.9757,
+        "f1": 0.9687,
+        "threshold": 0.77
+      },
+      "unet": {
+        "precision": 0.8929,
+        "recall": 0.9042,
+        "f1": 0.8985,
+        "threshold": 0.63
+      },
+      "ensemble": {
+        "alpha": 0.9,
+        "precision": 0.9561,
+        "recall": 0.9813,
+        "f1": 0.9685,
+        "threshold": 0.665
+      },
+      "ensemble_selected_alpha": {
+        "alpha": 1.0,
+        "precision": 0.9618,
+        "recall": 0.9757,
+        "f1": 0.9687,
+        "threshold": 0.77
+      }
+    },
+    {
+      "fold": 2,
+      "val_chips": 140,
+      "lgbm": {
+        "precision": 0.954,
+        "recall": 0.9774,
+        "f1": 0.9656,
+        "threshold": 0.85
+      },
+      "unet": {
+        "precision": 0.9058,
+        "recall": 0.9291,
+        "f1": 0.9173,
+        "threshold": 0.705
+      },
+      "ensemble": {
+        "alpha": 0.9,
+        "precision": 0.9537,
+        "recall": 0.9778,
+        "f1": 0.9656,
+        "threshold": 0.825
+      },
+      "ensemble_selected_alpha": {
+        "alpha": 0.9,
+        "precision": 0.9537,
+        "recall": 0.9778,
+        "f1": 0.9656,
+        "threshold": 0.825
+      }
+    },
+    {
+      "fold": 3,
+      "val_chips": 140,
+      "lgbm": {
+        "precision": 0.9487,
+        "recall": 0.9673,
+        "f1": 0.9579,
+        "threshold": 0.765
+      },
+      "unet": {
+        "precision": 0.8779,
+        "recall": 0.934,
+        "f1": 0.9051,
+        "threshold": 0.055
+      },
+      "ensemble": {
+        "alpha": 0.9,
+        "precision": 0.9473,
+        "recall": 0.9682,
+        "f1": 0.9576,
+        "threshold": 0.7
+      },
+      "ensemble_selected_alpha": {
+        "alpha": 1.0,
+        "precision": 0.9487,
+        "recall": 0.9673,
+        "f1": 0.9579,
+        "threshold": 0.765
+      }
+    }
+  ],
+  "summary": {
+    "lgbm": {
+      "mean_f1": 0.9641,
+      "std_f1": 0.0056
+    },
+    "unet": {
+      "mean_f1": 0.907,
+      "std_f1": 0.0095
+    },
+    "ensemble": {
+      "mean_f1": 0.9639,
+      "std_f1": 0.0056
+    }
+  }
+}

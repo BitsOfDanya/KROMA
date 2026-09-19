@@ -21,9 +21,9 @@ coverage/
 *.log
 *.tmp
 *.temp
-*.csv
 *.parquet
 *.geoparquet
+*.feather
 *.tif
 *.tiff
 *.jp2
@@ -37,6 +37,7 @@ coverage/
 *.pth
 *.ckpt
 *.pkl
+*.npz
 *.joblib
 *.safetensors
 *.ipynb_checkpoints/
@@ -51,3 +52,30 @@ data/yandex/
 
 ml/models/
 frontend/public/maplibre/
+
+# Local environment
+.env
+.env.*
+!.env.example
+frontend/.env.local
+
+# Python / ML caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# OS / IDE
+.DS_Store
+
+# Large intermediate ML data
+research/experiments/*.pkl
+research/experiments/*_cache.*
+research/experiments/*_oof.npy
+research/experiments/*_oof.npz
+
+# Runtime scratch
+tmp/
+temp/
+*.log

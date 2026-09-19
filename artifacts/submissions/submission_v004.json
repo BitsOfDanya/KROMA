@@ -1,0 +1,113 @@
+{
+  "created_at": "2026-09-19T12:27:36Z",
+  "version": "v004",
+  "parent": "v003 (public 0.72)",
+  "submission_path": "artifacts/submissions/submission_v004.csv",
+  "submission_sha256": "743138c25d3595e15c347da1a3028384f4b34d47286b1c1aaea7ccae480317c8",
+  "rows": {
+    "af": 180,
+    "bs": 267,
+    "total": 447
+  },
+  "af": {
+    "model": "research/experiments/af_fulltrain_model.joblib",
+    "model_sha256": "446a2c8655892beca43d074ea5154062af70cd4d950fec9122879a76612b0a6d",
+    "threshold": 0.765,
+    "oof_precision": 0.9422770700636943,
+    "oof_recall": 0.973573264781491,
+    "oof_f1": 0.9576695493855257,
+    "byte_identical_to_v003": true
+  },
+  "bs": {
+    "base": "v003 full-train ensemble, reproduced byte-exactly (bs_test_manifest_v004.json)",
+    "post_processing": [
+      "LightGBM refiner on v003 probabilities + organizer landcover dNBR physics, applied only where 0.3<=p_burn<=0.7 or within 2 px of the predicted contour",
+      "hybrid C: burn mask from refined prediction; severity = argmax(log p_sev + 1.0 * onehot(organizer landcover severity))"
+    ],
+    "organizer_thresholds": "research/experiments/bs_v004_physics_thresholds.json",
+    "oof_all_valid_bs": {
+      "v003": 0.3454981085885033,
+      "v004": 0.365234496973789
+    },
+    "oof_strict_bs": {
+      "v003": 0.36480848298266766,
+      "v004": 0.38220288560979415
+    },
+    "oof_per_fold_all_valid": {
+      "v003": {
+        "1": 0.34774103297722836,
+        "2": 0.3481367990737325,
+        "3": 0.34061649371454905
+      },
+      "v004": {
+        "1": 0.368171709069405,
+        "2": 0.36669009504259253,
+        "3": 0.36084168680936957
+      }
+    },
+    "oof_iou_per_class_all_valid": {
+      "v003": [
+        0.9216473884787403,
+        0.3426618634379393,
+        0.5333998544044986,
+        0.6834396376805391
+      ],
+      "v004": [
+        0.9224227932897262,
+        0.39910706380425964,
+        0.5664153800951366,
+        0.7235654446273284
+      ]
+    },
+    "test_inference": {
+      "base": "v003 full-train ensemble (read-only), reproduced byte-exactly before post-processing",
+      "members": [
+        "research/experiments/bs_full_ndvi_ohem40.pt",
+        "research/experiments/bs_full_dual.pt"
+      ],
+      "members_sha256": [
+        "a311138938da60d53360192a84d688b413e35bdac95ce0d8b0fb581205a85412",
+        "aa674bc97a9f7cc40be6a3183d39372ff233afae5ac4a42aee190f30c24f0908"
+      ],
+      "v003_bias": [
+        0.0,
+        0.4000000059604645,
+        0.20000000298023224,
+        0.20000000298023224
+      ],
+      "hybrid": "hybrid_C_w1.0",
+      "refiner": true,
+      "refiner_gate": {
+        "band": 0.3,
+        "radius": 2.0
+      },
+      "refiner_bias": [
+        0.0,
+        0.4,
+        1.0,
+        0.8
+      ],
+      "thresholds": "research/experiments/bs_v004_physics_thresholds.json",
+      "bs_chips": 89,
+      "changed_px_share": 0.0482747367258822,
+      "mean_ms_per_chip": 1948.3,
+      "total_seconds": 176.5,
+      "total_sev_px": {
+        "1": 2204953,
+        "2": 1653469,
+        "3": 756813
+      },
+      "deterministic_sha256": "9ae8c7d79a9cfc78450570ba7f95a2ca1032d32e16da692770a607269bea83ff",
+      "submission": "artifacts/bs_submission_v004.csv"
+    }
+  },
+  "validation": {
+    "path": "/Users/daniil/\u0425\u0430\u043a\u0430\u0442\u043e\u043d\u044b/KROMA/artifacts/submissions/submission_v004.csv",
+    "rows": 447,
+    "sha256": "743138c25d3595e15c347da1a3028384f4b34d47286b1c1aaea7ccae480317c8",
+    "af_chips": 180,
+    "bs_chips": 89,
+    "validated_at": "2026-09-19T12:27:36Z"
+  },
+  "public_score": null
+}

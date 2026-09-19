@@ -1,0 +1,29 @@
+{
+  "iou_per_class": [
+    0.8484412042482197,
+    0.1955952780951101,
+    0.46238178501957483,
+    0.5787856980531778
+  ],
+  "iou_burn": 0.414246982215346,
+  "miou_severity": 0.41225425372262087,
+  "miou_all": 0.5213009913540205,
+  "bs_score": 0.26866271989215734,
+  "config": "B",
+  "channel_names": [
+    "pre_red",
+    "pre_nir",
+    "pre_swir1",
+    "pre_swir2",
+    "post_red",
+    "post_nir",
+    "post_swir1",
+    "post_swir2",
+    "rdnbr"
+  ],
+  "params": 8727904,
+  "train_seconds": 819.2,
+  "train_chips": 179,
+  "val_chips": 45,
+  "epochs": 15
+}

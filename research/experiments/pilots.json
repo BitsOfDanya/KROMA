@@ -1,0 +1,76 @@
+{
+  "input_sha256": "da88dbed2f4fbf3249e4345afff52544d219e3177f585a1013547d2f59e6b92b",
+  "region_sha256": "47179a0b1f30097226bc057921e674d83a9ac9e2a44023e687351355cdb7fc1b",
+  "pilots": [
+    {
+      "name": "yakutia_remote_forest_window",
+      "type": "remote_forest",
+      "region_code": "RU-SA",
+      "mode": "fixed",
+      "bbox": [125, 56, 160, 74],
+      "date_from": "2023-07-12",
+      "date_to": "2023-07-12",
+      "historical_from": "2020-07-12",
+      "historical_to": "2023-07-11",
+      "sources": ["VIIRS_SNPP_NRT"],
+      "eps_km": 5,
+      "time_window_hours": 24,
+      "min_samples": 2,
+      "cell_km": 2
+    },
+    {
+      "name": "kuzbass_industrial_window",
+      "type": "industrial",
+      "region_code": "RU-KEM",
+      "mode": "fixed",
+      "bbox": [85, 52, 89, 57],
+      "date_from": "2023-07-12",
+      "date_to": "2023-07-12",
+      "historical_from": "2020-07-12",
+      "historical_to": "2023-07-11",
+      "sources": ["VIIRS_SNPP_NRT"],
+      "eps_km": 5,
+      "time_window_hours": 24,
+      "min_samples": 2,
+      "cell_km": 2,
+      "context": {
+        "path": "data/interim/osm/kuzbass_2023.geojson",
+        "sha256": "73dea8463cd09f1a8360c7bb63afc2f589d80ec9c26c56c7d4dfeff0778b85fe",
+        "bbox": [86.05, 54.2, 86.25, 54.35],
+        "as_of": "2023-07-12"
+      }
+    },
+    {
+      "name": "orenburg_agricultural_window",
+      "type": "agricultural",
+      "region_code": "RU-ORE",
+      "mode": "fixed",
+      "bbox": [50, 50, 63, 55],
+      "date_from": "2023-07-12",
+      "date_to": "2023-07-12",
+      "historical_from": "2020-07-12",
+      "historical_to": "2023-07-11",
+      "sources": ["VIIRS_SNPP_NRT"],
+      "eps_km": 5,
+      "time_window_hours": 24,
+      "min_samples": 2,
+      "cell_km": 2
+    },
+    {
+      "name": "krasnoyarsk_forest_window",
+      "type": "forest",
+      "region_code": "RU-KYA",
+      "mode": "fixed",
+      "bbox": [85, 52, 110, 73],
+      "date_from": "2023-07-12",
+      "date_to": "2023-07-12",
+      "historical_from": "2020-07-12",
+      "historical_to": "2023-07-11",
+      "sources": ["VIIRS_SNPP_NRT"],
+      "eps_km": 5,
+      "time_window_hours": 24,
+      "min_samples": 2,
+      "cell_km": 2
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-09-19T01:30:27Z",
+  "version": "v001",
+  "submission_path": "artifacts/submissions/submission_v001.csv",
+  "submission_sha256": "e275d087efe8fd49105ee734645b609031b7bd7f1847be745fab631a670b185c",
+  "rows": {
+    "af": 180,
+    "bs": 267
+  },
+  "af": {
+    "model": "research/experiments/af_fulltrain_model.joblib",
+    "model_sha256": "446a2c8655892beca43d074ea5154062af70cd4d950fec9122879a76612b0a6d",
+    "threshold": 0.765,
+    "oof_precision": 0.9422770700636943,
+    "oof_recall": 0.973573264781491,
+    "oof_f1": 0.9576695493855257
+  },
+  "bs": {
+    "model": "research/experiments/bs_baseline_model.pt",
+    "config": "B",
+    "iou_burn": 0.414246982215346,
+    "miou_severity": 0.41225425372262087,
+    "bs_score": 0.26866271989215734
+  },
+  "public_score": 0.5526,
+  "public_f1_af": null,
+  "public_iou_burn": null,
+  "public_miou_severity": null,
+  "public_score_recorded_at": "2026-09-19T00:00:00Z"
+}

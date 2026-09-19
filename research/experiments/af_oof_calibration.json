@@ -1,0 +1,26 @@
+{
+  "method": "pooled out-of-fold train probabilities; global F1 maximum on 0.001 grid",
+  "validity": "VIIRS valid=1, finite I4/I5, mask!=255; missing I1-I3 imputed by features",
+  "threshold": 0.765,
+  "oof_precision": 0.9422770700636943,
+  "oof_recall": 0.973573264781491,
+  "oof_f1": 0.9576695493855257,
+  "oof_valid_pixels": 25239188,
+  "oof_positive_pixels": 9725,
+  "train_chips": 420,
+  "train_ids_sha256": "f9e08f590b9f2161de876db05af3bd5bddc03d07a626a8d23a4fdac1931ad846",
+  "sources": [
+    {
+      "path": "research/experiments/af_cv_lgbm_thermal_valid_1.npz",
+      "sha256": "68ec6652d4cd79c54eb1747ab47c08c904ca199e55b1f76d5e20505d4c1c7fe6"
+    },
+    {
+      "path": "research/experiments/af_cv_lgbm_thermal_valid_2.npz",
+      "sha256": "989c8f98b620f6a7e7e8d1ea7821f2a939351f1a6f2e2473d654fc58ef966e55"
+    },
+    {
+      "path": "research/experiments/af_cv_lgbm_thermal_valid_3.npz",
+      "sha256": "5906d7ebd3d27f914b7f573df877e27f819c63274e2efd2acc8ddcc1b55b1071"
+    }
+  ]
+}

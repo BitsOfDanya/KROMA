@@ -1,0 +1,22 @@
+{
+  "iou_per_class": [
+    0.9216473884787403,
+    0.3426618634379393,
+    0.5333998544044986,
+    0.6834396376805391
+  ],
+  "iou_burn": 0.5424215186857975,
+  "miou_severity": 0.5198337851743257,
+  "miou_all": 0.6202871860004293,
+  "bs_score": 0.3457976670923268,
+  "config": "ensemble: B12_lc5_ndvi+OHEM0.4 & B12_lc5 dual-head, crop256, true-invalid ignore",
+  "evaluator": "all_valid_mask, 3-fold GroupKFold pooled OOF, global bias",
+  "strict_mask_bs_score": 0.364972807011981,
+  "strict_mask_iou_burn": 0.5769793312859662,
+  "strict_mask_miou_severity": 0.5434334702063093,
+  "fold_raw_bs_all_valid": [
+    0.34433321885964163,
+    0.35007966394438783,
+    0.33896337017362654
+  ]
+}

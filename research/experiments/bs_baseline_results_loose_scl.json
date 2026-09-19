@@ -1,0 +1,42 @@
+{
+  "iou_per_class": [
+    0.8332554338843323,
+    0.19615437231311797,
+    0.42421473314248465,
+    0.5345814088612706
+  ],
+  "iou_burn": 0.3777306959105137,
+  "miou_severity": 0.3849835047722911,
+  "miou_all": 0.4970514870503014,
+  "bs_score": 0.24770079500036712,
+  "metrics_under_strict_mask": {
+    "iou_per_class": [
+      0.8369939455119624,
+      0.1791666866130826,
+      0.47804249402268834,
+      0.623371428090181
+    ],
+    "iou_burn": 0.3983314578679819,
+    "miou_severity": 0.4268602029086506,
+    "miou_all": 0.5293936385594786,
+    "bs_score": 0.2674740711263889
+  },
+  "scl_strategy": "loose",
+  "config": "B",
+  "channel_names": [
+    "pre_red",
+    "pre_nir",
+    "pre_swir1",
+    "pre_swir2",
+    "post_red",
+    "post_nir",
+    "post_swir1",
+    "post_swir2",
+    "rdnbr"
+  ],
+  "params": 8727904,
+  "train_seconds": 727.5,
+  "train_chips": 179,
+  "val_chips": 45,
+  "epochs": 15
+}

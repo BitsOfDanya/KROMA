@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import csv
 import io
 import json
+import os
 import tarfile
 from functools import lru_cache
 from pathlib import Path
@@ -11,7 +13,10 @@ from typing import Any, Literal
 
 import numpy as np
 from fastapi import HTTPException
+from kroma_geo.raster_vector import ChipGeoreference
 from PIL import Image
+
+from app.services.ml_service import get_ml_service
 
 Asset = Literal[
     "mask",
@@ -41,11 +46,46 @@ ASSET_PATHS: dict[str, dict[Asset, str]] = {
 
 
 class TrainDatasetService:
-    def __init__(self, index_path: Path, tar_path: Path) -> None:
+    def __init__(self, index_path: Path, tar_path: Path, train_dir: Path | None = None) -> None:
         self.index_path = index_path
         self.tar_path = tar_path
+        self.train_dir = train_dir
         self._chips: dict[str, dict[str, Any]] = {}
+        self._georef: dict[str, ChipGeoreference] | None = None
         self._load()
+
+    @property
+    def directory_present(self) -> bool:
+        return bool(self.train_dir and (self.train_dir / "af").is_dir())
+
+    @property
+    def source(self) -> str | None:
+        if self.directory_present:
+            return "directory"
+        return "tar" if self.tar_path.is_file() else None
+
+    def georef(self, chip_id: str) -> ChipGeoreference | None:
+        """UTM raster origin from the official meta.csv (authoritative for prediction geometry)."""
+        if self._georef is None:
+            self._georef = {}
+            for kind in ("af", "bs"):
+                path = self.train_dir / kind / "meta.csv" if self.train_dir else None
+                if not path or not path.is_file():
+                    continue
+                with path.open(newline="", encoding="utf-8") as handle:
+                    for row in csv.DictReader(handle):
+                        try:
+                            gsd = float(row["gsd"])
+                            self._georef[row["chip_id"]] = ChipGeoreference(
+                                epsg=int(float(row["epsg"])),
+                                x_min=float(row["x_min"]),
+                                y_max=float(row["y_max"]),
+                                gsd_x=gsd,
+                                gsd_y=gsd,
+                            )
+                        except (KeyError, ValueError):
+                            continue
+        return self._georef.get(chip_id)
 
     def _load(self) -> None:
         if not self.index_path.is_file():
@@ -63,7 +103,9 @@ class TrainDatasetService:
             "dataset": "official_train",
             "label": "OFFICIAL TRAIN",
             "origin": "official_train",
-            "available": bool(self._chips) and self.tar_path.is_file(),
+            "available": bool(self._chips) and self.source is not None,
+            "source": self.source,
+            "directory_present": self.directory_present,
             "tar_present": self.tar_path.is_file(),
             "index_present": self.index_path.is_file(),
             "counts": {
@@ -109,6 +151,11 @@ class TrainDatasetService:
             raise HTTPException(status_code=404, detail=f"Unknown train chip: {chip_id}")
         kind = chip["kind"]
         assets = list(ASSET_PATHS.get(kind, {}).keys())
+        prediction_ready = (
+            self.directory_present
+            and self.georef(chip_id) is not None
+            and bool(get_ml_service().ready(kind))
+        )
         return {
             **chip,
             "assets": assets,
@@ -118,10 +165,11 @@ class TrainDatasetService:
                     if kind == "af"
                     else ["before_after", "ground_truth", "layers"]
                 ),
-                "prediction_available": False,
+                "prediction_available": prediction_ready,
                 "prediction_note": (
-                    "Model weights not mounted — showing official TRAIN ground truth only. "
-                    "Mount ml/artifacts to enable AF/BS prediction overlays."
+                    "Предсказание финальной модели (in-sample: модель обучена на всех train-чипах)."
+                    if prediction_ready
+                    else "Веса не смонтированы или нет растров: python scripts/mount_artifacts.py."
                 ),
             },
         }
@@ -135,9 +183,14 @@ class TrainDatasetService:
         return template.format(id=chip_id)
 
     def read_bytes(self, chip_id: str, asset: Asset) -> bytes:
-        if not self.tar_path.is_file():
-            raise HTTPException(status_code=503, detail="Train tar not available on server")
         member = self._member_for(chip_id, asset)
+        if self.directory_present:
+            path = self.train_dir.parent / member  # templates are "train/<kind>/..."
+            if not path.is_file():
+                raise HTTPException(status_code=404, detail=f"Missing {member}")
+            return path.read_bytes()
+        if not self.tar_path.is_file():
+            raise HTTPException(status_code=503, detail="Train data not available on server")
         with tarfile.open(self.tar_path, "r:") as tf:
             try:
                 f = tf.extractfile(member)
@@ -210,7 +263,10 @@ def _colorize_mask(mask: np.ndarray) -> Image.Image:
 @lru_cache
 def get_train_dataset_service() -> TrainDatasetService:
     root = Path(__file__).resolve().parents[3]
+    default_dir = root / "data" / "Мониторинг DATA" / "train"
+    train_dir = Path(os.environ.get("KROMA_TRAIN_ROOT") or default_dir)
     return TrainDatasetService(
         index_path=root / "data" / "fire-aoi" / "train_chips_index.json",
         tar_path=root / "data" / "yandex" / "fire-train-renamed.tar",
+        train_dir=train_dir,
     )

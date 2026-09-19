@@ -21,6 +21,7 @@ from app.schemas.analysis import (
 )
 from app.services.analysis import AnalysisService
 from app.services.errors import ResultConflictError
+from app.services.exports import shapefile_zip
 
 router = APIRouter(prefix="/analysis", tags=["Spatial analysis"])
 logger = logging.getLogger(__name__)
@@ -221,6 +222,30 @@ def export_contours(
         json.dumps(content, ensure_ascii=False, separators=(",", ":")),
         media_type="application/geo+json",
         headers={"Content-Disposition": f'attachment; filename="{_filename(result, "geojson")}"'},
+    )
+
+
+@router.get(
+    "/export/shapefile",
+    responses=ERROR_RESPONSES,
+    summary="Download the displayed burn zones as an ESRI Shapefile ZIP (WGS84)",
+)
+def export_shapefile(
+    request: Annotated[AnalysisRequest, Depends(analysis_request)],
+    repository: Annotated[PreparedDatasetRepository, Depends(get_prepared_repository)],
+    expected_result_id: Annotated[
+        str, Query(description="result_id returned by the analysis currently shown to the user")
+    ],
+) -> Response:
+    result = _analyze(repository, request)
+    _assert_result(result, expected_result_id)
+    features = result.burn_zones.model_dump(mode="json")["features"]
+    if not features:
+        raise HTTPException(status_code=404, detail="No burn zones in the requested area")
+    return Response(
+        shapefile_zip(features, _filename(result, "shp")[:-4]),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{_filename(result, "zip")}"'},
     )
 
 

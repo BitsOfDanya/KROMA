@@ -1,0 +1,35 @@
+{
+  "as_of": "2023-07-12",
+  "bbox": [
+    86.05,
+    54.2,
+    86.25,
+    54.35
+  ],
+  "cached": false,
+  "categories": [
+    "settlement",
+    "road",
+    "power_line",
+    "industrial",
+    "airport",
+    "railway",
+    "protected_area"
+  ],
+  "category_counts": {
+    "industrial": 24,
+    "power_line": 8,
+    "railway": 124,
+    "road": 669,
+    "settlement": 10
+  },
+  "created_at": "2026-09-18T08:22:00.386942+00:00",
+  "endpoint": "https://overpass-api.de/api/interpreter",
+  "feature_count": 835,
+  "osm_base_timestamp": "2026-09-18T08:19:50Z",
+  "output_sha256": "73dea8463cd09f1a8360c7bb63afc2f589d80ec9c26c56c7d4dfeff0778b85fe",
+  "processing_version": "osm-context-1.0",
+  "query_sha256": "976094a70b68a3ac1b58f8998e7ff52d7334764d69726c01aac7cbb5ca98c6f8",
+  "raw_path": "data/raw/osm/976094a70b68a3ac1b58.json",
+  "raw_sha256": "9ca3f27c33bea03b7dbb0b5323f480c2a5a5780b38f8ad70e3d69e1c4a4120fe"
+}

@@ -1,367 +1,98 @@
-"""ML inference adapter — loads artifacts once; safe if weights are missing."""
-
 from __future__ import annotations
 
-import os
+import logging
 import time
-from dataclasses import dataclass, field
+from collections import OrderedDict
 from functools import lru_cache
-from pathlib import Path
 from threading import Lock
 from typing import Any, Literal
 
+from kroma_ml import artifacts
+
 Kind = Literal["af", "bs"]
-
-
-@dataclass(frozen=True)
-class AFResult:
-    chip_id: str
-    model_version: str
-    runtime_ms: float
-    n_fire_px: int
-    confidence_mean: float | None
-    thermopoints: list[dict[str, Any]] = field(default_factory=list)
-    mask_available: bool = False
-    status: Literal["ok", "unavailable"] = "ok"
-    detail: str | None = None
-
-
-@dataclass(frozen=True)
-class BSResult:
-    chip_id: str
-    model_version: str
-    runtime_ms: float
-    total_area_ha: float | None
-    area_low_ha: float | None
-    area_moderate_ha: float | None
-    area_high_ha: float | None
-    polygons: list[dict[str, Any]] = field(default_factory=list)
-    mask_available: bool = False
-    status: Literal["ok", "unavailable"] = "ok"
-    detail: str | None = None
+logger = logging.getLogger(__name__)
+CACHE_SIZE = 12
 
 
 class MlUnavailableError(RuntimeError):
-    """Raised when artifacts are not mounted or inference cannot run."""
+    pass
 
 
 class MlService:
-    """Single-process adapter. Weights load once under lock.
-
-    Expected layout (optional until ML team mounts weights):
-      {artifacts}/af/lightgbm.joblib
-      {artifacts}/bs/model_a.pt
-      {artifacts}/bs/model_b.pt
-      {artifacts}/bs/refiner.joblib
-      {artifacts}/bs/calibration.json
-    """
-
-    def __init__(self, artifacts_root: Path | None = None) -> None:
-        root = artifacts_root or Path(
-            os.environ.get("KROMA_ML_ARTIFACTS_PATH", "")
-            or Path(__file__).resolve().parents[3] / "ml" / "artifacts"
-        )
-        self.artifacts_root = root
+    def __init__(self) -> None:
         self._lock = Lock()
-        self._af_model: Any = None
-        self._bs_bundle: Any = None
-        self._af_version = "af-unavailable"
-        self._bs_version = "bs-unavailable"
+        self._cache: OrderedDict[tuple[str, str], dict[str, Any]] = OrderedDict()
+        self._loaded: dict[str, float] = {}
 
     def status(self) -> dict[str, Any]:
-        af_path = self.artifacts_root / "af" / "lightgbm.joblib"
-        bs_paths = {
-            "model_a": self.artifacts_root / "bs" / "model_a.pt",
-            "model_b": self.artifacts_root / "bs" / "model_b.pt",
-            "refiner": self.artifacts_root / "bs" / "refiner.joblib",
-            "calibration": self.artifacts_root / "bs" / "calibration.json",
-        }
+        state = artifacts.status()
+        manifest = artifacts.read_manifest()
+        files = state["files"]
+        bs_keys = artifacts.BS_KEYS
         return {
-            "artifacts_root": str(self.artifacts_root),
+            "artifacts_root": state["artifacts_root"],
             "af": {
-                "ready": af_path.is_file(),
-                "path": str(af_path),
-                "model_version": self._af_version if af_path.is_file() else None,
-                "expected": "LightGBM corrected validity · 39 features · OOF HNM",
+                "ready": state["af"]["ready"],
+                "path": files["af_model"]["path"],
+                "model_version": state["af"]["model_version"],
+                "expected": "LightGBM · 39 признаков · corrected validity · OOF hard negatives",
             },
             "bs": {
-                "ready": all(p.is_file() for p in bs_paths.values()),
-                "paths": {k: str(v) for k, v in bs_paths.items()},
-                "present": {k: v.is_file() for k, v in bs_paths.items()},
-                "model_version": (
-                    self._bs_version if all(p.is_file() for p in bs_paths.values()) else None
-                ),
+                "ready": state["bs"]["ready"],
+                "paths": {key: files[key]["path"] for key in bs_keys},
+                "present": {key: files[key]["present"] for key in bs_keys},
+                "model_version": state["bs"]["model_version"],
                 "expected": (
-                    "Attention U-Net ensemble → physics/dNBR → LightGBM refiner (GOLD/v004)"
+                    "U-Net ensemble v003 → physics/dNBR + LightGBM refiner v004 → "
+                    "component filter → contour refiner v005"
                 ),
             },
+            "files": files,
+            "provenance": manifest.get("provenance", {}),
+            "load_seconds": dict(self._loaded),
             "note": (
-                "Weights are not shipped in this checkout. Mount ml/artifacts or set "
-                "KROMA_ML_ARTIFACTS_PATH. Train GT and footprints work without weights."
+                "Веса не входят в git. Смонтируйте их: python scripts/mount_artifacts.py "
+                "или задайте KROMA_ML_ARTIFACTS_PATH."
+                if not (state["af"]["ready"] and state["bs"]["ready"])
+                else "Модели готовы; сервис вызывает тот же пайплайн, что и inference.py."
             ),
         }
 
-    def _ensure_af(self) -> None:
+    def ready(self, kind: Kind) -> bool:
+        return bool(artifacts.status()[kind]["ready"])
+
+    def run(self, kind: Kind, chip_id: str) -> dict[str, Any]:
+        key = (kind, chip_id)
         with self._lock:
-            if self._af_model is not None:
-                return
-            path = self.artifacts_root / "af" / "lightgbm.joblib"
-            if not path.is_file():
+            if key in self._cache:
+                self._cache.move_to_end(key)
+                return self._cache[key]
+            if not self.ready(kind):
+                missing = [
+                    name
+                    for name, item in artifacts.status()["files"].items()
+                    if not item["present"] and (name == "af_model") == (kind == "af")
+                ]
                 raise MlUnavailableError(
-                    f"AF artifact missing: {path}. Mount LightGBM joblib under ml/artifacts/af/."
+                    f"{kind.upper()} weights are not mounted; missing: {', '.join(missing)}"
                 )
-            import joblib  # lazy
+            try:
+                from kroma_ml import service
 
-            self._af_model = joblib.load(path)
-            meta = self.artifacts_root / "af" / "version.txt"
-            self._af_version = meta.read_text().strip() if meta.is_file() else "af-lightgbm-current"
-
-    def _ensure_bs(self) -> None:
-        with self._lock:
-            if self._bs_bundle is not None:
-                return
-            required = [
-                self.artifacts_root / "bs" / "model_a.pt",
-                self.artifacts_root / "bs" / "model_b.pt",
-                self.artifacts_root / "bs" / "refiner.joblib",
-                self.artifacts_root / "bs" / "calibration.json",
-            ]
-            missing = [str(p) for p in required if not p.is_file()]
-            if missing:
-                raise MlUnavailableError(
-                    "BS artifacts missing: " + ", ".join(missing)
+                started = time.perf_counter()
+                result = (
+                    service.predict_af(chip_id) if kind == "af" else service.predict_bs(chip_id)
                 )
-            # Torch + LightGBM may need a subprocess boundary on some hosts.
-            # Load is deferred to kroma_ml.inference.bs when the package provides it.
-            try:
-                from kroma_ml.inference.bs import load_bs_bundle  # type: ignore
-            except ImportError as exc:
-                raise MlUnavailableError(
-                    "kroma_ml.inference.bs is not implemented yet; "
-                    "keep weights in ml/artifacts/bs and add the inference module."
-                ) from exc
-            self._bs_bundle = load_bs_bundle(self.artifacts_root / "bs")
-            meta = self.artifacts_root / "bs" / "version.txt"
-            self._bs_version = meta.read_text().strip() if meta.is_file() else "bs-gold-v004"
-
-    def predict_af(self, chip_id: str, chip_payload: dict[str, Any] | None = None) -> AFResult:
-        started = time.perf_counter()
-        try:
-            self._ensure_af()
-        except MlUnavailableError as exc:
-            return AFResult(
-                chip_id=chip_id,
-                model_version="unavailable",
-                runtime_ms=(time.perf_counter() - started) * 1000,
-                n_fire_px=0,
-                confidence_mean=None,
-                status="unavailable",
-                detail=str(exc),
-            )
-        try:
-            from kroma_ml.inference.af import predict_af_chip  # type: ignore
-
-            raw = predict_af_chip(self._af_model, chip_id, chip_payload)
-            return AFResult(
-                chip_id=chip_id,
-                model_version=self._af_version,
-                runtime_ms=(time.perf_counter() - started) * 1000,
-                n_fire_px=int(raw.get("n_fire_px", 0)),
-                confidence_mean=raw.get("confidence_mean"),
-                thermopoints=list(raw.get("thermopoints", [])),
-                mask_available=bool(raw.get("mask_available")),
-                status="ok",
-            )
-        except Exception as exc:  # noqa: BLE001 — surface as unavailable for demo safety
-            return AFResult(
-                chip_id=chip_id,
-                model_version=self._af_version,
-                runtime_ms=(time.perf_counter() - started) * 1000,
-                n_fire_px=0,
-                confidence_mean=None,
-                status="unavailable",
-                detail=f"AF inference failed: {exc}",
-            )
-
-    def predict_bs(self, chip_id: str, scene_payload: dict[str, Any] | None = None) -> BSResult:
-        started = time.perf_counter()
-        try:
-            self._ensure_bs()
-        except MlUnavailableError as exc:
-            return BSResult(
-                chip_id=chip_id,
-                model_version="unavailable",
-                runtime_ms=(time.perf_counter() - started) * 1000,
-                total_area_ha=None,
-                area_low_ha=None,
-                area_moderate_ha=None,
-                area_high_ha=None,
-                status="unavailable",
-                detail=str(exc),
-            )
-        try:
-            from kroma_ml.inference.bs import predict_bs_scene  # type: ignore
-
-            raw = predict_bs_scene(self._bs_bundle, chip_id, scene_payload)
-            return BSResult(
-                chip_id=chip_id,
-                model_version=self._bs_version,
-                runtime_ms=(time.perf_counter() - started) * 1000,
-                total_area_ha=raw.get("total_area_ha"),
-                area_low_ha=raw.get("area_low_ha"),
-                area_moderate_ha=raw.get("area_moderate_ha"),
-                area_high_ha=raw.get("area_high_ha"),
-                polygons=list(raw.get("polygons", [])),
-                mask_available=bool(raw.get("mask_available")),
-                status="ok",
-            )
-        except Exception as exc:  # noqa: BLE001
-            return BSResult(
-                chip_id=chip_id,
-                model_version=self._bs_version,
-                runtime_ms=(time.perf_counter() - started) * 1000,
-                total_area_ha=None,
-                area_low_ha=None,
-                area_moderate_ha=None,
-                area_high_ha=None,
-                status="unavailable",
-                detail=f"BS inference failed: {exc}",
-            )
-
-    def predict_upload(self, task: Kind, filename: str, data: bytes) -> dict[str, Any]:
-        """Run AF/BS on an uploaded raster/image. Returns JSON-serializable payload."""
-        from app.services.upload_decode import decode_upload, mask_to_png_b64
-
-        started = time.perf_counter()
-        decoded = decode_upload(filename, data)
-        array = decoded.pop("array")
-        chip_id = f"upload:{filename}"
-        payload = {"array": array, "filename": filename, "shape": decoded["shape"]}
-
-        if task == "af":
-            try:
-                self._ensure_af()
-                from kroma_ml.inference.af import predict_af_chip  # type: ignore
-
-                raw = predict_af_chip(self._af_model, chip_id, payload)
-                mask_b64 = None
-                if raw.get("mask") is not None:
-                    mask_b64 = mask_to_png_b64(raw["mask"], binary=True)
-                return {
-                    "task": "af",
-                    "input": decoded,
-                    "status": "ok",
-                    "detail": None,
-                    "model_version": self._af_version,
-                    "runtime_ms": (time.perf_counter() - started) * 1000,
-                    "n_fire_px": int(raw.get("n_fire_px", 0)),
-                    "confidence_mean": raw.get("confidence_mean"),
-                    "thermopoints": list(raw.get("thermopoints", [])),
-                    "mask_png_b64": mask_b64,
-                    "metrics": {
-                        "n_fire_px": int(raw.get("n_fire_px", 0)),
-                        "confidence_mean": raw.get("confidence_mean"),
-                    },
-                }
-            except MlUnavailableError as exc:
-                return {
-                    "task": "af",
-                    "input": decoded,
-                    "status": "unavailable",
-                    "detail": str(exc),
-                    "model_version": "unavailable",
-                    "runtime_ms": (time.perf_counter() - started) * 1000,
-                    "n_fire_px": 0,
-                    "confidence_mean": None,
-                    "thermopoints": [],
-                    "mask_png_b64": None,
-                    "metrics": {"n_fire_px": 0, "confidence_mean": None},
-                }
-            except Exception as exc:  # noqa: BLE001
-                return {
-                    "task": "af",
-                    "input": decoded,
-                    "status": "unavailable",
-                    "detail": f"AF inference failed: {exc}",
-                    "model_version": self._af_version,
-                    "runtime_ms": (time.perf_counter() - started) * 1000,
-                    "n_fire_px": 0,
-                    "confidence_mean": None,
-                    "thermopoints": [],
-                    "mask_png_b64": None,
-                    "metrics": {"n_fire_px": 0, "confidence_mean": None},
-                }
-
-        try:
-            self._ensure_bs()
-            from kroma_ml.inference.bs import predict_bs_scene  # type: ignore
-
-            raw = predict_bs_scene(self._bs_bundle, chip_id, payload)
-            mask_b64 = None
-            if raw.get("mask") is not None:
-                mask_b64 = mask_to_png_b64(raw["mask"], binary=False)
-            return {
-                "task": "bs",
-                "input": decoded,
-                "status": "ok",
-                "detail": None,
-                "model_version": self._bs_version,
-                "runtime_ms": (time.perf_counter() - started) * 1000,
-                "total_area_ha": raw.get("total_area_ha"),
-                "area_low_ha": raw.get("area_low_ha"),
-                "area_moderate_ha": raw.get("area_moderate_ha"),
-                "area_high_ha": raw.get("area_high_ha"),
-                "polygons": list(raw.get("polygons", [])),
-                "mask_png_b64": mask_b64,
-                "metrics": {
-                    "total_area_ha": raw.get("total_area_ha"),
-                    "area_low_ha": raw.get("area_low_ha"),
-                    "area_moderate_ha": raw.get("area_moderate_ha"),
-                    "area_high_ha": raw.get("area_high_ha"),
-                },
-            }
-        except MlUnavailableError as exc:
-            return {
-                "task": "bs",
-                "input": decoded,
-                "status": "unavailable",
-                "detail": str(exc),
-                "model_version": "unavailable",
-                "runtime_ms": (time.perf_counter() - started) * 1000,
-                "total_area_ha": None,
-                "area_low_ha": None,
-                "area_moderate_ha": None,
-                "area_high_ha": None,
-                "polygons": [],
-                "mask_png_b64": None,
-                "metrics": {
-                    "total_area_ha": None,
-                    "area_low_ha": None,
-                    "area_moderate_ha": None,
-                    "area_high_ha": None,
-                },
-            }
-        except Exception as exc:  # noqa: BLE001
-            return {
-                "task": "bs",
-                "input": decoded,
-                "status": "unavailable",
-                "detail": f"BS inference failed: {exc}",
-                "model_version": self._bs_version,
-                "runtime_ms": (time.perf_counter() - started) * 1000,
-                "total_area_ha": None,
-                "area_low_ha": None,
-                "area_moderate_ha": None,
-                "area_high_ha": None,
-                "polygons": [],
-                "mask_png_b64": None,
-                "metrics": {
-                    "total_area_ha": None,
-                    "area_low_ha": None,
-                    "area_moderate_ha": None,
-                    "area_high_ha": None,
-                },
-            }
+                self._loaded.setdefault(kind, round(time.perf_counter() - started, 2))
+            except FileNotFoundError as error:
+                raise MlUnavailableError(f"input data for {chip_id} not found: {error}") from error
+            except Exception as error:
+                logger.exception("ml_inference_failed kind=%s chip=%s", kind, chip_id)
+                raise MlUnavailableError(f"{kind.upper()} inference failed: {error}") from error
+            self._cache[key] = result
+            while len(self._cache) > CACHE_SIZE:
+                self._cache.popitem(last=False)
+            return result
 
 
 @lru_cache

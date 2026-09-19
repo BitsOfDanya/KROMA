@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-09-19T10:56:44Z",
+  "version": "v003",
+  "submission_path": "artifacts/submissions/submission_v003.csv",
+  "submission_sha256": "6a61626d45035ab7624b3a33bc48e352397af8c4d1839475e8625a66203b039c",
+  "rows": {
+    "af": 180,
+    "bs": 267
+  },
+  "af": {
+    "model": "research/experiments/af_fulltrain_model.joblib",
+    "model_sha256": "446a2c8655892beca43d074ea5154062af70cd4d950fec9122879a76612b0a6d",
+    "threshold": 0.765,
+    "oof_precision": 0.9422770700636943,
+    "oof_recall": 0.973573264781491,
+    "oof_f1": 0.9576695493855257
+  },
+  "bs": {
+    "model": "None",
+    "config": "ensemble: B12_lc5_ndvi+OHEM0.4 & B12_lc5 dual-head, crop256, true-invalid ignore",
+    "iou_burn": 0.5424215186857975,
+    "miou_severity": 0.5198337851743257,
+    "bs_score": 0.3457976670923268,
+    "note": "AF unchanged. BS = full-train ensemble (224 chips) of 2 crop-sampled Attention U-Nets: B12+landcover5+NDVI with OHEM 0.4, and B12+landcover5 true dual-head; crop256 50/30/20, true-invalid-only ignore, shared brightness aug; blend of logits + OOF global bias (0,0.4,0.2,0.2). local: GroupKFold pooled OOF BSScore 0.3458 (all-valid) / 0.3650 (strict) vs old recipe 0.298 (strict)"
+  },
+  "public_score": null,
+  "public_f1_af": null,
+  "public_iou_burn": null,
+  "public_miou_severity": null
+}

@@ -1,0 +1,75 @@
+{
+  "created_at": "2026-09-19T14:16:01Z",
+  "af_model_version": "af-v001 (full-train LightGBM, 39 features, threshold 0.765; unchanged in v001-v005)",
+  "bs_model_version": "bs-v005 (v003 U-Net ensemble -> v004 refiner+physics -> component filter -> refiner2)",
+  "provenance": {
+    "submission": "artifacts/submissions/submission_v005.csv",
+    "public_score": null,
+    "oof_all_valid": {
+      "v004": 0.365234496973789,
+      "candidate": 0.42983220988552323
+    },
+    "oof_strict": {
+      "v004": 0.38220288560979415,
+      "candidate": 0.4400924754222741
+    },
+    "oof_iou_all_valid": {
+      "v004": [
+        0.9224227932897262,
+        0.39910706380425964,
+        0.5664153800951366,
+        0.7235654446273284
+      ],
+      "candidate": [
+        0.9528923285225842,
+        0.5042666137648769,
+        0.6691951019991729,
+        0.7749762627785642
+      ]
+    }
+  },
+  "files": {
+    "af_model": {
+      "path": "af/af_fulltrain_model.joblib",
+      "bytes": 1040953,
+      "sha256": "446a2c8655892beca43d074ea5154062af70cd4d950fec9122879a76612b0a6d",
+      "source": "research/experiments/af_fulltrain_model.joblib"
+    },
+    "bs_neural_ndvi": {
+      "path": "bs/neural/bs_full_ndvi_ohem40.pt",
+      "bytes": 35033511,
+      "sha256": "a311138938da60d53360192a84d688b413e35bdac95ce0d8b0fb581205a85412",
+      "source": "research/experiments/bs_full_ndvi_ohem40.pt"
+    },
+    "bs_neural_dual": {
+      "path": "bs/neural/bs_full_dual.pt",
+      "bytes": 35028915,
+      "sha256": "aa674bc97a9f7cc40be6a3183d39372ff233afae5ac4a42aee190f30c24f0908",
+      "source": "research/experiments/bs_full_dual.pt"
+    },
+    "bs_thresholds": {
+      "path": "bs/physics_thresholds.json",
+      "bytes": 794,
+      "sha256": "2b9edd9be8820a1696bcc9dbc8a5eab091298282ede8b5371b7dd500c519fa63",
+      "source": "research/experiments/bs_v004_physics_thresholds.json"
+    },
+    "bs_v004_refiner": {
+      "path": "bs/v004_refiner.txt",
+      "bytes": 11269505,
+      "sha256": "46ef5aed5af5d6bdb28844c5ff44a38abbbd67e4e93c4a5299f15c66b74731e6",
+      "source": "data/processed/bs_v004/refiner_full_v004.txt"
+    },
+    "bs_component": {
+      "path": "bs/v005_component.txt",
+      "bytes": 1041008,
+      "sha256": "2e4140c177379fac9a9ecf63c67abd6d2c5b4af9bf0608ce82377184317521e1",
+      "source": "data/processed/bs_v005/components/component_full_v005b_candidate.txt"
+    },
+    "bs_refiner2": {
+      "path": "bs/v005_refiner2.txt",
+      "bytes": 3543661,
+      "sha256": "eb0402ba422a3f27f8a7235cbe234829d0f4af7f3dbb13318a6db4320619c9ae",
+      "source": "data/processed/bs_v005/refiner2/refiner2_full_v005b_candidate.txt"
+    }
+  }
+}

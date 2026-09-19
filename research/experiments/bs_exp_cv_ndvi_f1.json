@@ -1,0 +1,71 @@
+{
+  "id": "cv_ndvi",
+  "args": {
+    "id": "cv_ndvi",
+    "config": "B12_lc5_ndvi",
+    "crop": 256,
+    "mix": "0.5,0.3,0.2",
+    "geom": 1,
+    "brightness": 0.3,
+    "scl_ignore": "true",
+    "loss": "ohem",
+    "ohem": 0.4,
+    "ordinal": 0.0,
+    "weights": "none",
+    "epochs": 30,
+    "length_mult": 2.0,
+    "fold": 1,
+    "smoke": false
+  },
+  "channels": [
+    "pre_red",
+    "pre_nir",
+    "pre_swir1",
+    "pre_swir2",
+    "post_red",
+    "post_nir",
+    "post_swir1",
+    "post_swir2",
+    "dnbr12",
+    "rdnbr12",
+    "lc_forest",
+    "lc_grass",
+    "lc_crop",
+    "lc_wet",
+    "lc_other",
+    "ndvi_pre",
+    "ndvi_post",
+    "dndvi"
+  ],
+  "train_chips": 149,
+  "val_chips": 75,
+  "train_seconds": 494.9,
+  "strict_mask": {
+    "raw": {
+      "iou_per_class": [
+        0.9360500808079334,
+        0.2774722259795877,
+        0.5538060291267267,
+        0.7258520776210852
+      ],
+      "iou_burn": 0.5828628675706087,
+      "miou_severity": 0.5190434442424666,
+      "miou_all": 0.6232951033838333,
+      "bs_score": 0.359715036922453
+    }
+  },
+  "all_valid_mask": {
+    "raw": {
+      "iou_per_class": [
+        0.9340829025659232,
+        0.2777039973236281,
+        0.5036349154891211,
+        0.7119889851487117
+      ],
+      "iou_burn": 0.5334136548386983,
+      "miou_severity": 0.4977759659871537,
+      "miou_all": 0.606852700131846,
+      "bs_score": 0.33602756898969044
+    }
+  }
+}

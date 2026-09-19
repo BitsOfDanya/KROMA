@@ -1,0 +1,87 @@
+{
+  "created_at": "2026-09-19T13:15:19Z",
+  "submission_path": "artifacts/submissions/submission_v005.csv",
+  "submission_sha256": "a14cccdee4413fd2e14a4e8d0784208e0c5ed742319ca894f02ade22258f1527",
+  "parent": "submission_v004.csv (public 0.7406)",
+  "rows": {
+    "total": 447,
+    "af": 180,
+    "bs": 267
+  },
+  "af_byte_identical_to_v004_and_v003": true,
+  "validation": {
+    "path": "artifacts/submissions/submission_v005.csv",
+    "rows": 447,
+    "sha256": "a14cccdee4413fd2e14a4e8d0784208e0c5ed742319ca894f02ade22258f1527",
+    "af_chips": 180,
+    "bs_chips": 89,
+    "validated_at": "2026-09-19T13:23:10Z"
+  },
+  "version_candidate": "v005b_component_plus_refiner2",
+  "bs_change": "v004 BS -> (1) drop whole predicted-burn components (p_burn>=0.5 regions) with OOF-trained component probability <0.3; (2) pixel-level binary contour refiner v2 adds burn where p>=0.8 outside dropped components and removes kept-burn pixels with p<0.2; severity of added pixels from v004 probs + organizer landcover dNBR prior (hybrid C). AF unchanged.",
+  "oof_all_valid": {
+    "v004": 0.365234496973789,
+    "candidate": 0.42983220988552323
+  },
+  "oof_strict": {
+    "v004": 0.38220288560979415,
+    "candidate": 0.4400924754222741
+  },
+  "oof_per_fold_all_valid": {
+    "v004": {
+      "2": 0.36669009504259253,
+      "1": 0.368171709069405,
+      "3": 0.36084168680936957
+    },
+    "candidate": {
+      "2": 0.42673229454486317,
+      "1": 0.43247602826084214,
+      "3": 0.4302883068508644
+    }
+  },
+  "oof_iou_all_valid": {
+    "v004": [
+      0.9224227932897262,
+      0.39910706380425964,
+      0.5664153800951366,
+      0.7235654446273284
+    ],
+    "candidate": [
+      0.9528923285225842,
+      0.5042666137648769,
+      0.6691951019991729,
+      0.7749762627785642
+    ]
+  },
+  "oof_burn_change": {
+    "removed_share": 0.303,
+    "added_share": 0.0818
+  },
+  "test_inference": {
+    "base": "v004 (reproduced byte-exactly on all BS test chips before post-processing)",
+    "component_model": "data/processed/bs_v005/components/component_full_v005b_candidate.txt",
+    "refiner2_model": "data/processed/bs_v005/refiner2/refiner2_full_v005b_candidate.txt",
+    "rule": {
+      "comp_remove_below": 0.3,
+      "refiner2_add_at_or_above": 0.8,
+      "refiner2_remove_below": 0.2
+    },
+    "bs_chips": 89,
+    "removed_burn_share_test": 0.21974243998409615,
+    "added_burn_share_test": 0.05690522801114136,
+    "mean_ms_per_chip": 4124.7,
+    "mean_ms_contour_stage": 1500.4,
+    "total_seconds": 372.9,
+    "total_sev_px": {
+      "1": 1904548,
+      "2": 1306646,
+      "3": 652509
+    },
+    "deterministic_sha256": "3864f17ee8ee52d243f32519e58e6895bdba95b8a2df614a64b97741213d2511",
+    "submission": "artifacts/bs_submission_v005b_candidate.csv"
+  },
+  "version": "v005",
+  "promoted_from": "artifacts/submissions/candidates/submission_v005b_component_refiner2.csv",
+  "deterministic_rerun": "identical (sha 3864f17e...)",
+  "public_score": null
+}

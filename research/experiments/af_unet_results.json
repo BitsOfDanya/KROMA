@@ -1,0 +1,139 @@
+{
+  "ablation": [
+    {
+      "name": "unet_A_bce_dice",
+      "precision": 0.7692,
+      "recall": 0.7029,
+      "f1": 0.7346,
+      "threshold": 0.5,
+      "train_s": 253.4,
+      "params": 483729
+    },
+    {
+      "name": "unet_A_focal",
+      "precision": 0.0005,
+      "recall": 0.9426,
+      "f1": 0.0011,
+      "threshold": 0.05,
+      "train_s": 252.4,
+      "params": 483729
+    },
+    {
+      "name": "unet_A_focal_tversky",
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "threshold": 0.05,
+      "train_s": 246.1,
+      "params": 483729
+    },
+    {
+      "name": "unet_B_bce_dice",
+      "precision": 0.8572,
+      "recall": 0.867,
+      "f1": 0.8621,
+      "threshold": 0.45,
+      "train_s": 212.4,
+      "params": 483873
+    },
+    {
+      "name": "unet_B_focal",
+      "precision": 0.0764,
+      "recall": 0.3401,
+      "f1": 0.1248,
+      "threshold": 0.1,
+      "train_s": 242.6,
+      "params": 483873
+    },
+    {
+      "name": "unet_B_focal_tversky",
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "threshold": 0.05,
+      "train_s": 249.0,
+      "params": 483873
+    },
+    {
+      "name": "unet_C_bce_dice",
+      "precision": 0.84,
+      "recall": 0.8768,
+      "f1": 0.858,
+      "threshold": 0.8,
+      "train_s": 267.1,
+      "params": 484161
+    },
+    {
+      "name": "unet_C_focal",
+      "precision": 0.5007,
+      "recall": 0.5631,
+      "f1": 0.5301,
+      "threshold": 0.25,
+      "train_s": 248.1,
+      "params": 484161
+    },
+    {
+      "name": "unet_C_focal_tversky",
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "threshold": 0.05,
+      "train_s": 253.8,
+      "params": 484161
+    },
+    {
+      "name": "unet_D_bce_dice",
+      "precision": 0.7488,
+      "recall": 0.9305,
+      "f1": 0.8298,
+      "threshold": 0.95,
+      "train_s": 182.0,
+      "params": 485313
+    },
+    {
+      "name": "unet_D_focal",
+      "precision": 0.3657,
+      "recall": 0.387,
+      "f1": 0.3761,
+      "threshold": 0.25,
+      "train_s": 140.6,
+      "params": 485313
+    },
+    {
+      "name": "unet_D_focal_tversky",
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "threshold": 0.05,
+      "train_s": 145.7,
+      "params": 485313
+    },
+    {
+      "name": "unet_B_bce_dice_hardneg",
+      "precision": 0.8666,
+      "recall": 0.8987,
+      "f1": 0.8824,
+      "threshold": 0.05,
+      "train_s": 85.5,
+      "params": 483873
+    },
+    {
+      "name": "resunet_B_bce_dice",
+      "precision": 0.8938,
+      "recall": 0.9418,
+      "f1": 0.9172,
+      "threshold": 0.6,
+      "train_s": 160.7,
+      "params": 505825
+    }
+  ],
+  "best": {
+    "config": "B",
+    "precision": 0.8938,
+    "recall": 0.9418,
+    "f1": 0.9172,
+    "threshold": 0.6,
+    "cpu_ms_per_chip": 39.1,
+    "mps_ms_per_chip": 3.79
+  }
+}

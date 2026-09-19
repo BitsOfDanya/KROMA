@@ -1,0 +1,32 @@
+{
+  "iou_per_class": [
+    0.932968561215585,
+    0.2965783438447047,
+    0.5099081836327345,
+    0.6186280950369919
+  ],
+  "iou_burn": 0.5712066765106869,
+  "miou_severity": 0.47503820750481035,
+  "miou_all": 0.5895207959325041,
+  "bs_score": 0.3424337990301835,
+  "config": "B",
+  "channel_names": [
+    "pre_red",
+    "pre_nir",
+    "pre_swir1",
+    "pre_swir2",
+    "post_red",
+    "post_nir",
+    "post_swir1",
+    "post_swir2",
+    "rdnbr"
+  ],
+  "class_bias": [
+    0.0,
+    -1.5999999999999979,
+    -1.799999999999998,
+    -1.5999999999999979
+  ],
+  "base_model": "research/experiments/bs_baseline_model.pt",
+  "calibration_val_chips": 45
+}
