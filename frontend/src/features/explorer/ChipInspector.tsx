@@ -1,5 +1,8 @@
 "use client";
 
+/* Dynamic API / data-URI previews — next/image is not useful here. */
+/* eslint-disable @next/next/no-img-element */
+
 import { ArrowLeft, Layers, Satellite, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";

@@ -142,7 +142,7 @@ export function ExplorerView() {
   const setRegion = useWorkspace((state) => state.setRegion);
 
   const regions = overview.data?.regions ?? [];
-  const datasets = catalog.data?.items ?? [];
+  const datasets = catalog.data?.items;
 
   const applyPreset = (presetId: string) => {
     const preset = LAYER_PRESETS.find((item) => item.id === presetId);
@@ -164,7 +164,7 @@ export function ExplorerView() {
   };
 
   const analysisHref = useMemo(() => {
-    const first = datasets[0];
+    const first = datasets?.[0];
     if (!first) return "/analytics?tab=area";
     const draft = exampleDraft(first);
     const params = new URLSearchParams({
@@ -362,11 +362,11 @@ export function ExplorerView() {
             </div>
             {catalog.isPending && <p className={styles.muted}>Загружаем каталог…</p>}
             {catalog.isError && <ErrorMessage error={catalog.error} onRetry={() => catalog.refetch()} />}
-            {catalog.data && datasets.length === 0 && (
+            {catalog.data && (datasets?.length ?? 0) === 0 && (
               <StateMessage title="Нет наборов" detail="Проверьте KROMA_PREPARED_DATA_PATH и readiness." />
             )}
             <ul className={styles.list}>
-              {datasets.map((item) => (
+              {(datasets ?? []).map((item) => (
                 <li key={`${item.dataset_id}@${item.dataset_version}`}>
                   <div>
                     <strong>{item.name}</strong>

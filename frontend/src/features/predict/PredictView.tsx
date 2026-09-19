@@ -1,5 +1,8 @@
 "use client";
 
+/* Dynamic blob / base64 previews — next/image is not useful here. */
+/* eslint-disable @next/next/no-img-element */
+
 import { ImageUp, RotateCw, ShieldAlert, Upload } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useRef, useState, type DragEvent, type FormEvent } from "react";
